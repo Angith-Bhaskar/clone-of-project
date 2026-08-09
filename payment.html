@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BookMyShow Clone &mdash; Payment</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/booking.css" />
+</head>
+<body>
+  <!-- Shared navbar injected here by js/common.js -->
+  <div id="navbar"></div>
+
+  <main class="container payment-page">
+    <h1 class="summary-title">Choose Payment Method</h1>
+
+    <div class="payment-layout">
+      <!-- Method list -->
+      <nav class="payment-methods" id="paymentMethods">
+        <button type="button" class="payment-method active" data-method="upi">
+          <span>UPI</span>
+          <small>Pay via Google Pay, PhonePe, Paytm</small>
+        </button>
+        <button type="button" class="payment-method" data-method="credit">
+          <span>Credit Card</span>
+          <small>Visa, Mastercard, RuPay, Amex</small>
+        </button>
+        <button type="button" class="payment-method" data-method="debit">
+          <span>Debit Card</span>
+          <small>Visa, Mastercard, RuPay</small>
+        </button>
+        <button type="button" class="payment-method" data-method="netbanking">
+          <span>Net Banking</span>
+          <small>All major banks supported</small>
+        </button>
+        <button type="button" class="payment-method" data-method="wallet">
+          <span>Wallet</span>
+          <small>Paytm, Amazon Pay, Mobikwik</small>
+        </button>
+      </nav>
+
+      <!-- Method-specific dummy form -->
+      <section class="payment-details summary-card">
+        <div class="payment-form" data-form="upi">
+          <label class="field-label" for="upiId">UPI ID</label>
+          <input type="text" id="upiId" placeholder="yourname@upi" />
+        </div>
+
+        <div class="payment-form" data-form="credit" hidden>
+          <label class="field-label" for="creditCardNum">Card Number</label>
+          <input type="text" id="creditCardNum" placeholder="1234 5678 9012 3456" maxlength="19" />
+          <div class="field-row">
+            <div>
+              <label class="field-label" for="creditExpiry">Expiry</label>
+              <input type="text" id="creditExpiry" placeholder="MM/YY" maxlength="5" />
+            </div>
+            <div>
+              <label class="field-label" for="creditCvv">CVV</label>
+              <input type="text" id="creditCvv" placeholder="123" maxlength="3" />
+            </div>
+          </div>
+        </div>
+
+        <div class="payment-form" data-form="debit" hidden>
+          <label class="field-label" for="debitCardNum">Card Number</label>
+          <input type="text" id="debitCardNum" placeholder="1234 5678 9012 3456" maxlength="19" />
+          <div class="field-row">
+            <div>
+              <label class="field-label" for="debitExpiry">Expiry</label>
+              <input type="text" id="debitExpiry" placeholder="MM/YY" maxlength="5" />
+            </div>
+            <div>
+              <label class="field-label" for="debitCvv">CVV</label>
+              <input type="text" id="debitCvv" placeholder="123" maxlength="3" />
+            </div>
+          </div>
+        </div>
+
+        <div class="payment-form" data-form="netbanking" hidden>
+          <label class="field-label" for="bankSelect">Select Bank</label>
+          <select id="bankSelect">
+            <option>State Bank of India</option>
+            <option>HDFC Bank</option>
+            <option>ICICI Bank</option>
+            <option>Axis Bank</option>
+            <option>Kotak Mahindra Bank</option>
+          </select>
+        </div>
+
+        <div class="payment-form" data-form="wallet" hidden>
+          <label class="field-label" for="walletSelect">Select Wallet</label>
+          <select id="walletSelect">
+            <option>Paytm</option>
+            <option>Amazon Pay</option>
+            <option>Mobikwik</option>
+          </select>
+        </div>
+
+        <p class="payment-disclaimer">Demo UI only &mdash; no real payment gateway is integrated.</p>
+      </section>
+    </div>
+  </main>
+
+  <!-- Sticky pay bar -->
+  <div class="booking-bar">
+    <div class="booking-bar-info">
+      <span>Amount Payable</span>
+      <strong id="payAmountLabel">₹0</strong>
+    </div>
+    <button type="button" class="btn btn-primary" id="payNowBtn">Pay Now</button>
+  </div>
+
+  <!-- Shared footer injected here by js/common.js -->
+  <div id="footer"></div>
+
+  <script src="js/common.js"></script>
+  <script src="js/booking.js"></script>
+</body>
+</html>

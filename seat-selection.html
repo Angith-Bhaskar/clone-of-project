@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BookMyShow Clone &mdash; Seat Selection</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/booking.css" />
+</head>
+<body>
+  <!-- Shared navbar injected here by js/common.js -->
+  <div id="navbar"></div>
+
+  <main class="container seat-page">
+    <div class="seat-page-header">
+      <h1>The Last Signal</h1>
+      <p class="details-meta-line-dark">PVR Cinemas: Phoenix Mall &bull; Today, 8:30 PM &bull; IMAX</p>
+    </div>
+
+    <!-- Seat categories + grid, filled in by js/booking.js -->
+    <div class="seat-layout" id="seatLayout"></div>
+
+    <!-- Screen indicator -->
+    <div class="screen-wrap">
+      <div class="screen"></div>
+      <p class="screen-label">All eyes this way please!</p>
+    </div>
+
+    <!-- Legend -->
+    <div class="seat-legend">
+      <span><i class="seat-swatch available"></i> Available</span>
+      <span><i class="seat-swatch selected"></i> Selected</span>
+      <span><i class="seat-swatch booked"></i> Booked</span>
+    </div>
+  </main>
+
+  <!-- Sticky summary bar -->
+  <div class="booking-bar" id="bookingBar">
+    <div class="booking-bar-info">
+      <span id="seatCountLabel">0 Tickets</span>
+      <strong id="seatTotalLabel">₹0</strong>
+    </div>
+    <button type="button" class="btn btn-primary" id="proceedBtn" disabled>Proceed to Pay</button>
+  </div>
+
+  <!-- Shared footer injected here by js/common.js -->
+  <div id="footer"></div>
+
+  <script src="js/common.js"></script>
+  <script src="js/booking.js"></script>
+</body>
+</html>

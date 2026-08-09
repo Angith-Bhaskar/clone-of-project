@@ -1,0 +1,92 @@
+/* ==========================================================================
+   home.css
+   Styles specific to the Home page: banner carousel + category card rows.
+   ========================================================================== */
+
+/* ---- Banner carousel ---------------------------------------------------- */
+.banner {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  overflow: hidden;
+  background: var(--color-bg-section);
+}
+
+.banner-track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.5s ease-in-out;
+}
+
+.banner-slide {
+  flex: 0 0 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+}
+
+.banner-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--color-text);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.banner-nav:hover {
+  background: #fff;
+  transform: translateY(-50%) scale(1.08);
+}
+
+.banner-prev {
+  left: 16px;
+}
+
+.banner-next {
+  right: 16px;
+}
+
+.banner-dots {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+
+.banner-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.banner-dot.active {
+  background: #fff;
+  transform: scale(1.25);
+}
+
+/* ---- Category sections --------------------------------------------------- */
+.category-section {
+  margin: 40px 0;
+}
+
+/* .card-row / .media-card* live in common.css — shared across Home,
+   Search Results, and Movie Listing. */
+
+/* ---- Responsive ------------------------------------------------------------ */
+@media (max-width: 768px) {
+  .banner {
+    height: 220px;
+  }
+}

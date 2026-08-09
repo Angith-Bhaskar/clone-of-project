@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BookMyShow Clone &mdash; Sign Up</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body>
+  <!-- Shared navbar injected here by js/common.js -->
+  <div id="navbar"></div>
+
+  <main class="auth-page">
+    <div class="auth-card">
+      <h1 class="auth-title">Create Account</h1>
+      <p class="auth-subtitle">Sign up to book tickets for movies, events, plays and more.</p>
+
+      <!-- Google sign-up (UI only, no real OAuth) -->
+      <button type="button" class="btn btn-outline btn-block google-btn" id="googleSignupBtn">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="" width="18" height="18" />
+        Continue with Google
+      </button>
+
+      <div class="auth-divider"><span>or</span></div>
+
+      <form class="auth-form" id="signupForm" novalidate>
+        <label class="field-label" for="nameInput">Full Name</label>
+        <input type="text" id="nameInput" placeholder="Enter your full name" />
+        <p class="field-error" id="nameError"></p>
+
+        <label class="field-label" for="signupEmailInput">Email Address</label>
+        <input type="email" id="signupEmailInput" placeholder="you@example.com" />
+        <p class="field-error" id="signupEmailError"></p>
+
+        <label class="field-label" for="signupPhoneInput">Phone Number</label>
+        <div class="phone-input-group">
+          <span class="phone-prefix">+91</span>
+          <input type="tel" id="signupPhoneInput" placeholder="Enter 10-digit mobile number" maxlength="10" inputmode="numeric" />
+        </div>
+        <p class="field-error" id="signupPhoneError"></p>
+
+        <label class="field-label" for="signupPasswordInput">Password</label>
+        <div class="password-input-group">
+          <input type="password" id="signupPasswordInput" placeholder="Create a password" />
+          <button type="button" class="toggle-password" id="toggleSignupPassword" aria-label="Show password">&#128065;</button>
+        </div>
+        <p class="field-error" id="signupPasswordError"></p>
+
+        <label class="field-label" for="confirmPasswordInput">Confirm Password</label>
+        <div class="password-input-group">
+          <input type="password" id="confirmPasswordInput" placeholder="Re-enter your password" />
+          <button type="button" class="toggle-password" id="toggleConfirmPassword" aria-label="Show password">&#128065;</button>
+        </div>
+        <p class="field-error" id="confirmPasswordError"></p>
+
+        <button type="submit" class="btn btn-primary btn-block">Sign Up</button>
+      </form>
+
+      <p class="auth-footer-text">
+        Already have an account? <a href="login.html" class="auth-link">Sign In</a>
+      </p>
+    </div>
+  </main>
+
+  <!-- Shared footer injected here by js/common.js -->
+  <div id="footer"></div>
+
+  <script src="js/common.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

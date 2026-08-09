@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BookMyShow Clone &mdash; Home</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/home.css" />
+</head>
+<body>
+  <!-- Shared navbar injected here by js/common.js -->
+  <div id="navbar"></div>
+
+  <main>
+    <!-- Banner carousel -->
+    <section class="banner">
+      <div class="banner-track" id="bannerTrack">
+        <div class="banner-slide" style="background-image:url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1600&q=80')"></div>
+        <div class="banner-slide" style="background-image:url('https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=1600&q=80')"></div>
+        <div class="banner-slide" style="background-image:url('https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=1600&q=80')"></div>
+        <div class="banner-slide" style="background-image:url('https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1600&q=80')"></div>
+      </div>
+
+      <button class="banner-nav banner-prev" id="bannerPrev" aria-label="Previous slide">&#10094;</button>
+      <button class="banner-nav banner-next" id="bannerNext" aria-label="Next slide">&#10095;</button>
+
+      <div class="banner-dots" id="bannerDots"></div>
+    </section>
+
+    <div class="container">
+      <!-- Recommended Movies -->
+      <section class="category-section">
+        <div class="section-heading">
+          <h2>Recommended Movies</h2>
+          <a href="movies.html">See All &rarr;</a>
+        </div>
+        <div class="card-row" id="recommendedMovies"></div>
+      </section>
+
+      <!-- Live Events -->
+      <section class="category-section">
+        <div class="section-heading">
+          <h2>Live Events</h2>
+          <a href="index.html">See All &rarr;</a>
+        </div>
+        <div class="card-row" id="liveEvents"></div>
+      </section>
+
+      <!-- Premieres -->
+      <section class="category-section">
+        <div class="section-heading">
+          <h2>Premieres</h2>
+          <a href="movies.html">See All &rarr;</a>
+        </div>
+        <div class="card-row" id="premieres"></div>
+      </section>
+
+      <!-- Outdoor Events -->
+      <section class="category-section">
+        <div class="section-heading">
+          <h2>Outdoor Events</h2>
+          <a href="index.html">See All &rarr;</a>
+        </div>
+        <div class="card-row" id="outdoorEvents"></div>
+      </section>
+
+      <!-- Laughter Shows -->
+      <section class="category-section">
+        <div class="section-heading">
+          <h2>Laughter Shows</h2>
+          <a href="index.html">See All &rarr;</a>
+        </div>
+        <div class="card-row" id="laughterShows"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Shared footer injected here by js/common.js -->
+  <div id="footer"></div>
+
+  <script src="js/common.js"></script>
+  <script src="js/home.js"></script>
+</body>
+</html>

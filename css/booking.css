@@ -1,0 +1,496 @@
+/* ==========================================================================
+   booking.css
+   Shared across seat-selection, booking-summary, payment, booking-confirmation.
+   Sections are grouped by page; extend below as later pages are built.
+   ========================================================================== */
+
+/* ==========================================================================
+   Seat Selection
+   ========================================================================== */
+
+.seat-page {
+  padding: 24px 20px 120px; /* extra bottom padding clears the sticky bar */
+}
+
+.seat-page-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.seat-page-header h1 {
+  font-size: 1.4rem;
+  margin-bottom: 6px;
+}
+
+/* ---- Category groups ------------------------------------------------------- */
+.seat-category {
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.seat-category-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.seat-category-price {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-bottom: 14px;
+}
+
+.seat-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.seat-row-label {
+  width: 18px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-align: right;
+}
+
+.seat-row-seats {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---- Individual seat ------------------------------------------------------- */
+.seat {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px 6px 3px 3px;
+  border: 1.5px solid #9ca3af;
+  background: #fff;
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.seat:hover:not(.booked) {
+  transform: translateY(-2px);
+  border-color: var(--color-primary);
+}
+
+.seat.selected {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.seat.booked {
+  background: #e5e7eb;
+  border-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* ---- Screen indicator ------------------------------------------------------- */
+.screen-wrap {
+  text-align: center;
+  margin: 32px 0 20px;
+}
+
+.screen {
+  width: 70%;
+  max-width: 520px;
+  height: 6px;
+  margin: 0 auto 10px;
+  background: linear-gradient(180deg, rgba(196, 36, 42, 0.35), transparent);
+  border-radius: 50%;
+  box-shadow: 0 -6px 16px rgba(196, 36, 42, 0.25);
+}
+
+.screen-label {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  letter-spacing: 0.5px;
+}
+
+/* ---- Legend ------------------------------------------------------------------ */
+.seat-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.seat-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.seat-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  display: inline-block;
+  border: 1.5px solid #9ca3af;
+}
+
+.seat-swatch.available {
+  background: #fff;
+}
+
+.seat-swatch.selected {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.seat-swatch.booked {
+  background: #e5e7eb;
+  border-color: #d1d5db;
+}
+
+/* ---- Sticky booking bar -------------------------------------------------------
+   Shared shell reused on Booking Summary / Payment for their action bars. */
+.booking-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-top: 1px solid var(--color-border);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+  padding: 14px 24px;
+}
+
+.booking-bar-info {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.booking-bar-info strong {
+  font-size: 1.1rem;
+  color: var(--color-text);
+}
+
+.booking-bar .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .seat {
+    width: 22px;
+    height: 22px;
+  }
+
+  .seat-row {
+    gap: 6px;
+  }
+
+  .seat-row-seats {
+    gap: 5px;
+  }
+}
+
+/* ==========================================================================
+   Booking Summary
+   ========================================================================== */
+
+.summary-page {
+  padding: 24px 20px 120px;
+}
+
+.summary-title {
+  font-size: 1.4rem;
+  margin-bottom: 20px;
+}
+
+.summary-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 640px;
+}
+
+.summary-card {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 18px 20px;
+}
+
+.summary-card h3 {
+  font-size: 0.95rem;
+  margin-bottom: 14px;
+}
+
+.show-card {
+  display: flex;
+  gap: 16px;
+}
+
+.summary-poster {
+  width: 80px;
+  border-radius: var(--radius-control);
+  flex-shrink: 0;
+}
+
+.show-card-info h2 {
+  font-size: 1.05rem;
+  margin-bottom: 4px;
+}
+
+.show-card-venue {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 6px 0 2px;
+}
+
+/* ---- Removable seat chips --------------------------------------------------- */
+.seat-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.seat-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-bg-section);
+  border-radius: var(--radius-control);
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.seat-chip button {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.seat-chip button:hover {
+  color: var(--color-primary);
+}
+
+/* ---- Price breakdown --------------------------------------------------------- */
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  padding: 6px 0;
+}
+
+.price-row-total {
+  border-top: 1px solid var(--color-border);
+  margin-top: 6px;
+  padding-top: 12px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* ==========================================================================
+   Payment
+   ========================================================================== */
+
+.payment-page {
+  padding: 24px 20px 120px;
+}
+
+.payment-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 20px;
+  align-items: start;
+  max-width: 760px;
+}
+
+.payment-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.payment-method {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+  padding: 12px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-control);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.payment-method span {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.payment-method small {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.payment-method.active {
+  border-color: var(--color-primary);
+  background: #fdf2f2;
+}
+
+.payment-method.active span {
+  color: var(--color-primary);
+}
+
+.payment-details select,
+.payment-details input[type="text"] {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  font-size: 0.92rem;
+  margin-bottom: 14px;
+}
+
+.payment-details select:focus,
+.payment-details input[type="text"]:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.field-row {
+  display: flex;
+  gap: 14px;
+}
+
+.field-row > div {
+  flex: 1;
+}
+
+.payment-disclaimer {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+@media (max-width: 700px) {
+  .payment-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   Booking Confirmation
+   ========================================================================== */
+
+.confirmation-page {
+  display: flex;
+  justify-content: center;
+  padding: 48px 20px 80px;
+}
+
+.confirmation-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--color-bg);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 32px 28px;
+  text-align: center;
+}
+
+.success-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #fff;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirmation-card h1 {
+  font-size: 1.4rem;
+  margin-bottom: 4px;
+}
+
+.booking-id-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  margin: 18px 0;
+}
+
+.copy-btn {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--radius-control);
+  padding: 3px 10px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.copy-btn:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.copy-btn.copied {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #fff;
+}
+
+.qr-wrap {
+  margin: 0 auto 20px;
+  width: 140px;
+}
+
+.qr-code {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+
+.confirmation-details {
+  text-align: left;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  padding: 16px 0;
+  margin-bottom: 20px;
+}
+
+.confirmation-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.88rem;
+  padding: 6px 0;
+}
+
+.confirmation-label {
+  color: var(--color-text-muted);
+}
+
+.view-bookings-link {
+  display: block;
+  margin-top: 14px;
+  font-size: 0.88rem;
+}

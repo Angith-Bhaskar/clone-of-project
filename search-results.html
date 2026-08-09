@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BookMyShow Clone &mdash; Search Results</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/movies.css" />
+</head>
+<body>
+  <!-- Shared navbar injected here by js/common.js -->
+  <div id="navbar"></div>
+
+  <main class="container">
+    <!-- Standalone search bar + suggestions for this page (in addition to navbar's) -->
+    <section class="results-search">
+      <div class="results-search-box">
+        <input type="text" id="resultsSearchInput" placeholder="Search for movies, events, plays, sports and activities" autocomplete="off" />
+        <ul class="search-suggestions" id="resultsSuggestions"></ul>
+      </div>
+    </section>
+
+    <!-- Movies results -->
+    <section class="results-section">
+      <div class="section-heading">
+        <h2>Movies</h2>
+      </div>
+      <div class="card-row" id="movieResults"></div>
+    </section>
+
+    <!-- Events results -->
+    <section class="results-section">
+      <div class="section-heading">
+        <h2>Events</h2>
+      </div>
+      <div class="card-row" id="eventResults"></div>
+    </section>
+
+    <!-- Empty state, shown when a search matches nothing -->
+    <section class="empty-state" id="emptyState" hidden>
+      <img src="https://via.placeholder.com/160x160.png?text=No+Results" alt="No results" />
+      <h3>No results found</h3>
+      <p>We couldn't find anything matching your search. Try a different keyword.</p>
+    </section>
+  </main>
+
+  <!-- Shared footer injected here by js/common.js -->
+  <div id="footer"></div>
+
+  <script src="js/common.js"></script>
+  <script src="js/movies.js"></script>
+</body>
+</html>

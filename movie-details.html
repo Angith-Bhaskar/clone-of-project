@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BookMyShow Clone &mdash; Movie Details</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/movies.css" />
+</head>
+<body>
+  <!-- Shared navbar injected here by js/common.js -->
+  <div id="navbar"></div>
+
+  <main>
+    <!-- Large banner behind the poster/title block -->
+    <section class="details-banner" style="background-image:url('https://images.unsplash.com/photo-1517602302552-471fe67acf66?w=1600&q=80')">
+      <div class="details-banner-overlay"></div>
+
+      <div class="container details-banner-content">
+        <img class="details-poster" src="https://images.unsplash.com/photo-1517602302552-471fe67acf66?w=400&q=80" alt="The Last Signal poster" />
+
+        <div class="details-heading">
+          <h1>The Last Signal</h1>
+
+          <div class="details-tags">
+            <span class="tag-rating">&#9733; 8.9/10</span>
+            <span class="tag">Sci-Fi</span>
+            <span class="tag">Thriller</span>
+            <span class="tag">UA</span>
+          </div>
+
+          <p class="details-meta-line">2h 18m &bull; English, Hindi &bull; IMAX, 2D &bull; Released 12 Jul 2026</p>
+
+          <button type="button" class="btn btn-primary book-tickets-btn" onclick="window.location.href='show-timings.html'">
+            Book Tickets
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div class="container details-body">
+      <!-- About / expandable description -->
+      <section class="details-section">
+        <h2>About the Movie</h2>
+        <p class="about-text" id="aboutText">
+          When a deep-space listening station picks up a signal that shouldn't exist, a
+          skeleton crew stationed at the edge of the solar system must decide whether to
+          answer it. As communications with Earth fail one by one, trust unravels between
+          the scientists on board, and what began as a routine research mission turns into
+          a fight to understand whether they are truly alone &mdash; and whether the signal
+          was ever meant for them.
+        </p>
+        <button type="button" class="expand-toggle" id="expandToggle">Read more</button>
+      </section>
+
+      <!-- Cast -->
+      <section class="details-section">
+        <h2>Cast</h2>
+        <div class="people-row">
+          <div class="person-card">
+            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80" alt="" />
+            <span>Arjun Verma</span>
+          </div>
+          <div class="person-card">
+            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80" alt="" />
+            <span>Meera Kapoor</span>
+          </div>
+          <div class="person-card">
+            <img src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=200&q=80" alt="" />
+            <span>Rohan Shah</span>
+          </div>
+          <div class="person-card">
+            <img src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&q=80" alt="" />
+            <span>Isha Nair</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Crew -->
+      <section class="details-section">
+        <h2>Crew</h2>
+        <div class="people-row">
+          <div class="person-card">
+            <img src="https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=200&q=80" alt="" />
+            <span>Karan Mehta<br /><small>Director</small></span>
+          </div>
+          <div class="person-card">
+            <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&q=80" alt="" />
+            <span>Divya Rao<br /><small>Writer</small></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Reviews -->
+      <section class="details-section">
+        <h2>Reviews</h2>
+        <div class="reviews-list">
+          <article class="review-card">
+            <div class="review-header">
+              <strong>Ananya S.</strong>
+              <span class="tag-rating">&#9733; 9/10</span>
+            </div>
+            <p>Gripping from start to finish, the tension in the second act is unbearable in the best way.</p>
+          </article>
+          <article class="review-card">
+            <div class="review-header">
+              <strong>Rahul D.</strong>
+              <span class="tag-rating">&#9733; 8/10</span>
+            </div>
+            <p>Great visuals and sound design. The pacing dips a little in the middle but sticks the landing.</p>
+          </article>
+          <article class="review-card">
+            <div class="review-header">
+              <strong>Priya M.</strong>
+              <span class="tag-rating">&#9733; 8.5/10</span>
+            </div>
+            <p>One of the better sci-fi thrillers this year. Worth watching in IMAX.</p>
+          </article>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Shared footer injected here by js/common.js -->
+  <div id="footer"></div>
+
+  <script src="js/common.js"></script>
+  <script src="js/movies.js"></script>
+</body>
+</html>

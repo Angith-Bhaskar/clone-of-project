@@ -1,0 +1,211 @@
+/* ==========================================================================
+   auth.css
+   Shared across login, signup, forgot-password.
+   Sections are grouped by page; extend below as later pages are built.
+   ========================================================================== */
+
+/* ==========================================================================
+   Shared auth-card shell
+   ========================================================================== */
+
+.auth-page {
+  display: flex;
+  justify-content: center;
+  padding: 48px 20px 80px;
+  background: var(--color-bg-section);
+  min-height: calc(100vh - var(--header-height) - 200px);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--color-bg);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 32px 28px;
+}
+
+.auth-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.auth-subtitle {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin-bottom: 24px;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 20px 0;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.auth-divider span {
+  padding: 0 12px;
+}
+
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* ---- Tabs (phone / email) ------------------------------------------------ */
+.auth-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 20px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 10px 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.auth-tab.active {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* ---- Form fields ---------------------------------------------------------- */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.field-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.auth-form input[type="text"],
+.auth-form input[type="tel"],
+.auth-form input[type="email"],
+.auth-form input[type="password"] {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  font-size: 0.92rem;
+  margin-bottom: 4px;
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.auth-form input.invalid {
+  border-color: var(--color-primary);
+}
+
+.phone-input-group {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.phone-input-group:focus-within {
+  border-color: var(--color-primary);
+}
+
+.phone-prefix {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  background: var(--color-bg-section);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.phone-input-group input {
+  border: none !important;
+  margin-bottom: 0 !important;
+  border-radius: 0 !important;
+}
+
+.password-input-group {
+  position: relative;
+}
+
+.password-input-group input {
+  padding-right: 42px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  opacity: 0.6;
+}
+
+.toggle-password:hover {
+  opacity: 1;
+}
+
+.field-error {
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  min-height: 18px;
+  margin-bottom: 10px;
+}
+
+.auth-link {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.forgot-link {
+  display: block;
+  text-align: right;
+  font-size: 0.82rem;
+  margin-bottom: 16px;
+}
+
+.auth-success {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  border-radius: var(--radius-control);
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  margin-top: 16px;
+}
+
+.auth-footer-text {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: 20px;
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 26px 20px;
+  }
+}

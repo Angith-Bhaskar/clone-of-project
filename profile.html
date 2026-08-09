@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BookMyShow Clone &mdash; My Profile</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/profile.css" />
+</head>
+<body>
+  <!-- Shared navbar injected here by js/common.js -->
+  <div id="navbar"></div>
+
+  <main class="container profile-page">
+    <!-- Side nav shared with booking-history.html -->
+    <aside class="profile-nav">
+      <a href="profile.html" class="profile-nav-link active">My Profile</a>
+      <a href="booking-history.html" class="profile-nav-link">Booking History</a>
+    </aside>
+
+    <section class="profile-card">
+      <div class="profile-photo-wrap">
+        <img class="profile-photo" src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=200&q=80" alt="Profile photo" id="profilePhoto" />
+        <button type="button" class="change-photo-btn" id="changePhotoBtn" hidden>Change Photo</button>
+      </div>
+
+      <form class="profile-form" id="profileForm" novalidate>
+        <label class="field-label" for="profileName">Full Name</label>
+        <input type="text" id="profileName" value="Ananya Sharma" disabled />
+
+        <label class="field-label" for="profileEmail">Email Address</label>
+        <input type="email" id="profileEmail" value="ananya.sharma@example.com" disabled />
+
+        <label class="field-label" for="profilePhone">Phone Number</label>
+        <input type="tel" id="profilePhone" value="9876543210" disabled />
+
+        <div class="profile-actions">
+          <button type="button" class="btn btn-outline" id="editProfileBtn">Edit Profile</button>
+          <button type="submit" class="btn btn-primary" id="saveProfileBtn" hidden>Save Changes</button>
+          <button type="button" class="btn btn-outline" id="cancelEditBtn" hidden>Cancel</button>
+        </div>
+
+        <p class="profile-save-note" id="profileSaveNote" hidden>Changes saved locally for this session only.</p>
+      </form>
+    </section>
+  </main>
+
+  <!-- Shared footer injected here by js/common.js -->
+  <div id="footer"></div>
+
+  <script src="js/common.js"></script>
+  <script src="js/profile.js"></script>
+</body>
+</html>

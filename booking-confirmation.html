@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BookMyShow Clone &mdash; Booking Confirmed</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/booking.css" />
+</head>
+<body>
+  <!-- Shared navbar injected here by js/common.js -->
+  <div id="navbar"></div>
+
+  <main class="container confirmation-page">
+    <div class="confirmation-card">
+      <div class="success-icon">&#10003;</div>
+      <h1>Booking Confirmed!</h1>
+      <p class="details-meta-line-dark">Your tickets are booked. Enjoy the show!</p>
+
+      <div class="booking-id-row">
+        <span>Booking ID: <strong id="bookingIdLabel">&mdash;</strong></span>
+        <button type="button" class="copy-btn" id="copyBookingIdBtn">Copy</button>
+      </div>
+
+      <!-- Dummy QR code -- a static placeholder pattern, not scannable -->
+      <div class="qr-wrap">
+        <svg viewBox="0 0 100 100" class="qr-code" aria-label="Dummy booking QR code">
+          <rect width="100" height="100" fill="#fff" />
+          <g fill="#111827">
+            <rect x="4" y="4" width="24" height="24" />
+            <rect x="10" y="10" width="12" height="12" fill="#fff" />
+            <rect x="72" y="4" width="24" height="24" />
+            <rect x="78" y="10" width="12" height="12" fill="#fff" />
+            <rect x="4" y="72" width="24" height="24" />
+            <rect x="10" y="78" width="12" height="12" fill="#fff" />
+            <rect x="36" y="8" width="6" height="6" /><rect x="48" y="8" width="6" height="6" /><rect x="60" y="8" width="6" height="6" />
+            <rect x="36" y="20" width="6" height="6" /><rect x="54" y="20" width="6" height="6" />
+            <rect x="36" y="36" width="6" height="6" /><rect x="48" y="36" width="6" height="6" /><rect x="60" y="36" width="6" height="6" /><rect x="72" y="36" width="6" height="6" /><rect x="84" y="36" width="6" height="6" />
+            <rect x="8" y="48" width="6" height="6" /><rect x="20" y="48" width="6" height="6" /><rect x="36" y="48" width="6" height="6" /><rect x="60" y="48" width="6" height="6" /><rect x="84" y="48" width="6" height="6" />
+            <rect x="36" y="60" width="6" height="6" /><rect x="48" y="60" width="6" height="6" /><rect x="72" y="60" width="6" height="6" /><rect x="90" y="60" width="6" height="6" />
+            <rect x="36" y="72" width="6" height="6" /><rect x="54" y="72" width="6" height="6" /><rect x="66" y="72" width="6" height="6" /><rect x="84" y="72" width="6" height="6" />
+            <rect x="36" y="84" width="6" height="6" /><rect x="48" y="84" width="6" height="6" /><rect x="60" y="84" width="6" height="6" /><rect x="78" y="84" width="6" height="6" /><rect x="90" y="84" width="6" height="6" />
+          </g>
+        </svg>
+      </div>
+
+      <div class="confirmation-details">
+        <div class="confirmation-row">
+          <span class="confirmation-label">Movie</span>
+          <span>The Last Signal</span>
+        </div>
+        <div class="confirmation-row">
+          <span class="confirmation-label">Theatre</span>
+          <span>PVR Cinemas: Phoenix Mall</span>
+        </div>
+        <div class="confirmation-row">
+          <span class="confirmation-label">Date &amp; Time</span>
+          <span>Today, 8:30 PM</span>
+        </div>
+        <div class="confirmation-row">
+          <span class="confirmation-label">Seats</span>
+          <span id="confirmationSeats">&mdash;</span>
+        </div>
+      </div>
+
+      <a href="index.html" class="btn btn-primary btn-block">Back to Home</a>
+      <a href="booking-history.html" class="auth-link view-bookings-link">View My Bookings</a>
+    </div>
+  </main>
+
+  <!-- Shared footer injected here by js/common.js -->
+  <div id="footer"></div>
+
+  <script src="js/common.js"></script>
+  <script src="js/booking.js"></script>
+</body>
+</html>

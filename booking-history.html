@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BookMyShow Clone &mdash; Booking History</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/profile.css" />
+</head>
+<body>
+  <!-- Shared navbar injected here by js/common.js -->
+  <div id="navbar"></div>
+
+  <main class="container profile-page">
+    <!-- Side nav shared with profile.html -->
+    <aside class="profile-nav">
+      <a href="profile.html" class="profile-nav-link">My Profile</a>
+      <a href="booking-history.html" class="profile-nav-link active">Booking History</a>
+    </aside>
+
+    <section class="history-section">
+      <div class="history-header">
+        <h1>Booking History</h1>
+
+        <div class="history-filters" id="historyFilters">
+          <button type="button" class="history-filter-btn active" data-status="all">All</button>
+          <button type="button" class="history-filter-btn" data-status="upcoming">Upcoming</button>
+          <button type="button" class="history-filter-btn" data-status="completed">Completed</button>
+          <button type="button" class="history-filter-btn" data-status="cancelled">Cancelled</button>
+        </div>
+      </div>
+
+      <div class="booking-list" id="bookingList"></div>
+
+      <div class="empty-state" id="historyEmptyState" hidden>
+        <img src="https://via.placeholder.com/160x160.png?text=No+Bookings" alt="No bookings" />
+        <h3>No bookings here</h3>
+        <p>You don't have any bookings in this category yet.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Shared footer injected here by js/common.js -->
+  <div id="footer"></div>
+
+  <script src="js/common.js"></script>
+  <script src="js/profile.js"></script>
+</body>
+</html>

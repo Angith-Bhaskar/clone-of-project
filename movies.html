@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BookMyShow Clone &mdash; Movies</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/movies.css" />
+</head>
+<body>
+  <!-- Shared navbar injected here by js/common.js -->
+  <div id="navbar"></div>
+
+  <main class="container listing-page">
+    <div class="section-heading">
+      <h2>Movies in Your City</h2>
+      <span class="result-count" id="resultCount"></span>
+    </div>
+
+    <div class="listing-layout">
+      <!-- Filter panel -->
+      <aside class="filter-panel" id="filterPanel">
+        <div class="filter-panel-header">
+          <h3>Filters</h3>
+          <button type="button" class="clear-filters-btn" id="clearFiltersBtn">Clear All</button>
+        </div>
+
+        <fieldset class="filter-group">
+          <legend>Language</legend>
+          <label><input type="checkbox" name="filterLanguage" value="Hindi" /> Hindi</label>
+          <label><input type="checkbox" name="filterLanguage" value="English" /> English</label>
+          <label><input type="checkbox" name="filterLanguage" value="Tamil" /> Tamil</label>
+          <label><input type="checkbox" name="filterLanguage" value="Telugu" /> Telugu</label>
+        </fieldset>
+
+        <fieldset class="filter-group">
+          <legend>Genre</legend>
+          <label><input type="checkbox" name="filterGenre" value="Action" /> Action</label>
+          <label><input type="checkbox" name="filterGenre" value="Comedy" /> Comedy</label>
+          <label><input type="checkbox" name="filterGenre" value="Drama" /> Drama</label>
+          <label><input type="checkbox" name="filterGenre" value="Romance" /> Romance</label>
+          <label><input type="checkbox" name="filterGenre" value="Sci-Fi" /> Sci-Fi</label>
+          <label><input type="checkbox" name="filterGenre" value="Thriller" /> Thriller</label>
+          <label><input type="checkbox" name="filterGenre" value="Mystery" /> Mystery</label>
+          <label><input type="checkbox" name="filterGenre" value="Adventure" /> Adventure</label>
+        </fieldset>
+
+        <fieldset class="filter-group">
+          <legend>Format</legend>
+          <label><input type="checkbox" name="filterFormat" value="2D" /> 2D</label>
+          <label><input type="checkbox" name="filterFormat" value="3D" /> 3D</label>
+          <label><input type="checkbox" name="filterFormat" value="IMAX" /> IMAX</label>
+        </fieldset>
+
+        <fieldset class="filter-group">
+          <legend>Price</legend>
+          <input type="range" id="priceRange" min="100" max="500" step="10" value="500" />
+          <span class="filter-hint" id="priceRangeLabel">Up to ₹500</span>
+        </fieldset>
+
+        <fieldset class="filter-group">
+          <legend>Rating</legend>
+          <label><input type="radio" name="filterRating" value="0" checked /> All</label>
+          <label><input type="radio" name="filterRating" value="7" /> 7+ &#9733;</label>
+          <label><input type="radio" name="filterRating" value="8" /> 8+ &#9733;</label>
+          <label><input type="radio" name="filterRating" value="8.5" /> 8.5+ &#9733;</label>
+        </fieldset>
+      </aside>
+
+      <!-- Movie grid -->
+      <section class="listing-results">
+        <div class="card-row" id="movieListingGrid"></div>
+
+        <div class="empty-state" id="listingEmptyState" hidden>
+          <img src="https://via.placeholder.com/160x160.png?text=No+Movies" alt="No movies" />
+          <h3>No movies match these filters</h3>
+          <p>Try relaxing a few filters to see more results.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Shared footer injected here by js/common.js -->
+  <div id="footer"></div>
+
+  <script src="js/common.js"></script>
+  <script src="js/movies.js"></script>
+</body>
+</html>
