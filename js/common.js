@@ -109,9 +109,7 @@ function renderFooter() {
           </ul>
         </div>
       </div>
-      <div class="footer-bottom">
-        &copy; ${year} BookMyShow Clone &mdash; College project demo. Not affiliated with the real BookMyShow.
-      </div>
+
     </footer>
   `;
 }
