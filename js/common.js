@@ -1,27 +1,18 @@
 /* ==========================================================================
    common.js
    Shared across all pages: navbar/footer injection, city selector,
-   dummy search suggestions, responsive menu toggle.
-   Loaded on every page (after common.css, before the page-specific JS file).
+   navbar search suggestions, responsive menu toggle.
+   Loaded on every page (after common.css, before js/api.js and the
+   page-specific JS file — the navbar suggestion box needs apiGet/debounce/
+   escapeHTML from js/api.js by the time DOMContentLoaded fires).
    ========================================================================== */
 
-/* Dummy city list used by the city selector dropdown (frontend-only). */
+/* Dummy city list used by the city selector dropdown (frontend-only).
+   Known gap (CLAUDE.md section 11): picking a city doesn't filter data —
+   all seeded theatres are in Mumbai regardless of selection. */
 const CITIES = [
   "Mumbai", "Delhi-NCR", "Bengaluru", "Hyderabad",
   "Ahmedabad", "Chandigarh", "Chennai", "Pune", "Kolkata", "Kochi"
-];
-
-/* Dummy dataset the search bar suggests against (movies + events).
-   Real filtering happens per-page (movies.js / home.js); common.js only
-   renders the shared suggestions dropdown used in the navbar. */
-const SEARCH_INDEX = [
-  { title: "Fireheart", type: "Movie" },
-  { title: "Silent Tide", type: "Movie" },
-  { title: "The Last Signal", type: "Movie" },
-  { title: "Comedy Nights Live", type: "Event" },
-  { title: "Neon Dreams Tour", type: "Event" },
-  { title: "Midnight Runners", type: "Movie" },
-  { title: "Stand-Up Saturdays", type: "Event" },
 ];
 
 /**
@@ -130,14 +121,14 @@ function setupCitySelector() {
   });
 }
 
-/** Filters SEARCH_INDEX against the navbar input and renders a dropdown. */
+/** Queries movies + events for the navbar search box and renders a suggestion dropdown. */
 function setupSearchSuggestions() {
   const input = document.getElementById("navSearchInput");
   const list = document.getElementById("navSuggestions");
   if (!input || !list) return;
 
-  input.addEventListener("input", () => {
-    const query = input.value.trim().toLowerCase();
+  const search = debounce(async (rawQuery) => {
+    const query = rawQuery.trim();
 
     if (!query) {
       list.classList.remove("active");
@@ -145,28 +136,41 @@ function setupSearchSuggestions() {
       return;
     }
 
-    const matches = SEARCH_INDEX.filter((item) =>
-      item.title.toLowerCase().includes(query)
-    );
+    try {
+      const suffix = `?q=${encodeURIComponent(query)}&limit=5`;
+      const [movies, events] = await Promise.all([
+        apiGet(`/movies${suffix}`),
+        apiGet(`/events${suffix}`),
+      ]);
 
-    if (matches.length === 0) {
-      list.innerHTML = `<li><a href="#">No results for "${query}"</a></li>`;
-    } else {
-      list.innerHTML = matches
-        .map(
-          (item) => `
+      const matches = [
+        ...movies.map((m) => ({ title: m.title, type: "Movie" })),
+        ...events.map((e) => ({ title: e.title, type: "Event" })),
+      ];
+
+      list.innerHTML = matches.length
+        ? matches
+            .map(
+              (item) => `
             <li>
               <a href="search-results.html?q=${encodeURIComponent(item.title)}">
-                ${item.title}
-                <span class="suggestion-type">${item.type}</span>
+                ${escapeHTML(item.title)}
+                <span class="suggestion-type">${escapeHTML(item.type)}</span>
               </a>
             </li>`
-        )
-        .join("");
-    }
+            )
+            .join("")
+        : `<li><a href="search-results.html?q=${encodeURIComponent(query)}">No results for "${escapeHTML(query)}"</a></li>`;
 
-    list.classList.add("active");
-  });
+      list.classList.add("active");
+    } catch (err) {
+      console.error(err);
+      list.innerHTML = `<li><a href="#">Couldn't load suggestions</a></li>`;
+      list.classList.add("active");
+    }
+  }, 250);
+
+  input.addEventListener("input", () => search(input.value));
 
   // Close dropdown when clicking outside of it.
   document.addEventListener("click", (e) => {
@@ -177,25 +181,27 @@ function setupSearchSuggestions() {
 }
 
 /**
- * Builds one media card's markup (movie or event) from a dummy data item.
+ * Builds one media card's markup (movie or event) from a data item.
  * Shared by home.js and movies.js so card markup stays consistent.
- * Expects { title, meta, rating, poster }.
+ * Expects { title, meta, rating, poster, href }. `href` falls back to "#".
+ * The card itself is the <a> (class stays "media-card" so existing CSS,
+ * which targets the class not the tag, keeps working unchanged).
  */
 function mediaCardHTML(item) {
   return `
-    <article class="media-card">
-      <div class="media-card-poster" style="background-image:url('${item.poster}')">
-        <span class="media-card-rating">&#9733; ${item.rating}</span>
+    <a class="media-card" href="${escapeHTML(item.href || "#")}">
+      <div class="media-card-poster" style="background-image:url('${escapeHTML(item.poster)}')">
+        <span class="media-card-rating">&#9733; ${escapeHTML(String(item.rating))}</span>
       </div>
       <div class="media-card-body">
-        <div class="media-card-title">${item.title}</div>
-        <div class="media-card-meta">${item.meta}</div>
+        <div class="media-card-title">${escapeHTML(item.title)}</div>
+        <div class="media-card-meta">${escapeHTML(item.meta)}</div>
       </div>
-    </article>
+    </a>
   `;
 }
 
-/** Renders a list of dummy items into the card row with the given id. */
+/** Renders a list of items into the card row with the given id. */
 function renderCardRow(containerId, items) {
   const el = document.getElementById(containerId);
   if (!el) return;

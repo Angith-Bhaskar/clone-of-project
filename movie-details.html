@@ -13,25 +13,20 @@
 
   <main>
     <!-- Large banner behind the poster/title block -->
-    <section class="details-banner" style="background-image:url('https://images.unsplash.com/photo-1517602302552-471fe67acf66?w=1600&q=80')">
+    <section class="details-banner" id="detailsBanner">
       <div class="details-banner-overlay"></div>
 
       <div class="container details-banner-content">
-        <img class="details-poster" src="https://images.unsplash.com/photo-1517602302552-471fe67acf66?w=400&q=80" alt="The Last Signal poster" />
+        <img class="details-poster" id="detailsPoster" src="" alt="" />
 
         <div class="details-heading">
-          <h1>The Last Signal</h1>
+          <h1 id="detailsTitle">Loading&hellip;</h1>
 
-          <div class="details-tags">
-            <span class="tag-rating">&#9733; 8.9/10</span>
-            <span class="tag">Sci-Fi</span>
-            <span class="tag">Thriller</span>
-            <span class="tag">UA</span>
-          </div>
+          <div class="details-tags" id="detailsTags"></div>
 
-          <p class="details-meta-line">2h 18m &bull; English, Hindi &bull; IMAX, 2D &bull; Released 12 Jul 2026</p>
+          <p class="details-meta-line" id="detailsMetaLine"></p>
 
-          <button type="button" class="btn btn-primary book-tickets-btn" onclick="window.location.href='show-timings.html'">
+          <button type="button" class="btn btn-primary book-tickets-btn" id="bookTicketsBtn" disabled>
             Book Tickets
           </button>
         </div>
@@ -56,39 +51,13 @@
       <!-- Cast -->
       <section class="details-section">
         <h2>Cast</h2>
-        <div class="people-row">
-          <div class="person-card">
-            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80" alt="" />
-            <span>Arjun Verma</span>
-          </div>
-          <div class="person-card">
-            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80" alt="" />
-            <span>Meera Kapoor</span>
-          </div>
-          <div class="person-card">
-            <img src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=200&q=80" alt="" />
-            <span>Rohan Shah</span>
-          </div>
-          <div class="person-card">
-            <img src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&q=80" alt="" />
-            <span>Isha Nair</span>
-          </div>
-        </div>
+        <div class="people-row" id="castRow"></div>
       </section>
 
       <!-- Crew -->
       <section class="details-section">
         <h2>Crew</h2>
-        <div class="people-row">
-          <div class="person-card">
-            <img src="https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=200&q=80" alt="" />
-            <span>Karan Mehta<br /><small>Director</small></span>
-          </div>
-          <div class="person-card">
-            <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&q=80" alt="" />
-            <span>Divya Rao<br /><small>Writer</small></span>
-          </div>
-        </div>
+        <div class="people-row" id="crewRow"></div>
       </section>
 
       <!-- Reviews -->
@@ -125,6 +94,7 @@
   <div id="footer"></div>
 
   <script src="js/common.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/movies.js"></script>
 </body>
 </html>

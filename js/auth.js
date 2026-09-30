@@ -11,7 +11,7 @@
 /** 10-digit Indian mobile number, no leading zero. */
 function isValidPhone(value) {
   return /^[6-9]\d{9}$/.test(value.trim());
-}
+} 
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());

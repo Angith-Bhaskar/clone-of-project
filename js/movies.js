@@ -1,94 +1,108 @@
 /* ==========================================================================
    movies.js
    Shared across search-results, movies, movie-details, show-timings.
-   Currently implements: Search Results page (dummy search filtering) and
-   Movie Listing page (dummy filter panel: language/genre/format/price/rating).
+   Search Results, Movie Listing and Show Timings all read live data from
+   the backend API via js/api.js (loaded before this file: apiGet, apiPost,
+   toLocalDateString, getQueryParam, escapeHTML, debounce, movieToCard,
+   eventToCard).
    Relies on js/common.js already having run (navbar/footer injected,
    mediaCardHTML()/renderCardRow() available).
    ========================================================================== */
 
-/* ---- Dummy dataset (hardcoded, no backend) ------------------------------
-   `meta`/`rating`/`poster`/`title` feed mediaCardHTML() (search results,
-   listing grid). `language`/`genre`/`format`/`price`/`ratingValue` are the
-   extra attributes the Movie Listing filter panel filters on. */
+// Bumped on every search request; a response is discarded once a newer
+// request has started, so a slow early keystroke can't overwrite later results.
+let searchRequestId = 0;
 
-const ALL_MOVIES = [
-  { title: "Fireheart", meta: "Action, Thriller | UA", rating: "8.2", ratingValue: 8.2, poster: "https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?w=400&q=80", language: "Hindi", genre: "Action", format: "2D", price: 220 },
-  { title: "Silent Tide", meta: "Drama | U", rating: "7.6", ratingValue: 7.6, poster: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&q=80", language: "English", genre: "Drama", format: "2D", price: 180 },
-  { title: "The Last Signal", meta: "Sci-Fi | UA", rating: "8.9", ratingValue: 8.9, poster: "https://images.unsplash.com/photo-1517602302552-471fe67acf66?w=400&q=80", language: "English", genre: "Sci-Fi", format: "IMAX", price: 350 },
-  { title: "Midnight Runners", meta: "Action, Comedy | UA", rating: "7.4", ratingValue: 7.4, poster: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=400&q=80", language: "Hindi", genre: "Comedy", format: "2D", price: 200 },
-  { title: "Crimson Sky", meta: "Adventure | U", rating: "8.0", ratingValue: 8.0, poster: "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=400&q=80", language: "Telugu", genre: "Adventure", format: "3D", price: 280 },
-  { title: "Echoes of Us", meta: "Romance, Drama | UA", rating: "7.9", ratingValue: 7.9, poster: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=400&q=80", language: "Tamil", genre: "Romance", format: "2D", price: 190 },
-  { title: "Winter's Edge", meta: "Thriller | UA", rating: "8.3", ratingValue: 8.3, poster: "https://images.unsplash.com/photo-1499364615650-ec38552f4f34?w=400&q=80", language: "English", genre: "Thriller", format: "IMAX", price: 320 },
-  { title: "The Glass House", meta: "Mystery | UA", rating: "7.7", ratingValue: 7.7, poster: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&q=80", language: "Hindi", genre: "Mystery", format: "2D", price: 210 },
-];
-
-const ALL_EVENTS = [
-  { title: "Comedy Nights Live", meta: "Stand-up | Mumbai", rating: "8.5", poster: "https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=400&q=80" },
-  { title: "Neon Dreams Tour", meta: "Music Concert | Delhi", rating: "9.0", poster: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400&q=80" },
-  { title: "Jazz Under Stars", meta: "Music | Bengaluru", rating: "8.1", poster: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&q=80" },
-  { title: "Indie Beats Fest", meta: "Music Festival | Pune", rating: "7.8", poster: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=400&q=80" },
-  { title: "Street Food Carnival", meta: "Food Fest | Chennai", rating: "8.6", poster: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80" },
-];
-
-/** Reads the `q` query param, if the page was reached via a suggestion link. */
-function getQueryParam(name) {
-  return new URLSearchParams(window.location.search).get(name) || "";
-}
-
-/** Filters ALL_MOVIES/ALL_EVENTS by title and re-renders the results page. */
-function runSearch(query) {
-  const q = query.trim().toLowerCase();
-
-  const movieMatches = q
-    ? ALL_MOVIES.filter((m) => m.title.toLowerCase().includes(q))
-    : ALL_MOVIES;
-  const eventMatches = q
-    ? ALL_EVENTS.filter((e) => e.title.toLowerCase().includes(q))
-    : ALL_EVENTS;
-
-  renderCardRow("movieResults", movieMatches);
-  renderCardRow("eventResults", eventMatches);
-
+/** Queries GET /movies?q= and GET /events?q=, renders both result rows, and
+ *  returns the raw { movies, events } so the suggestion dropdown can reuse them. */
+async function runSearch(query) {
+  const movieGrid = document.getElementById("movieResults");
+  const eventGrid = document.getElementById("eventResults");
   const emptyState = document.getElementById("emptyState");
-  const noResults = movieMatches.length === 0 && eventMatches.length === 0;
-  emptyState.hidden = !noResults;
+  if (!movieGrid || !eventGrid) return null;
+
+  const q = query.trim();
+  const requestId = ++searchRequestId;
+
+  movieGrid.innerHTML = `<p class="list-message">Searching&hellip;</p>`;
+  eventGrid.innerHTML = "";
+  if (emptyState) emptyState.hidden = true;
+
+  try {
+    const suffix = q ? `?q=${encodeURIComponent(q)}` : "";
+    const [movies, events] = await Promise.all([
+      apiGet(`/movies${suffix}`),
+      apiGet(`/events${suffix}`),
+    ]);
+    if (requestId !== searchRequestId) return null; // a newer search has since started
+
+    renderCardRow("movieResults", movies.map(movieToCard));
+    renderCardRow("eventResults", events.map(eventToCard));
+
+    const noResults = movies.length === 0 && events.length === 0;
+    if (emptyState) emptyState.hidden = !noResults;
+
+    return { movies, events };
+  } catch (err) {
+    if (requestId !== searchRequestId) return null;
+    console.error(err);
+    movieGrid.innerHTML = `<p class="list-message">Couldn't load results. Please try again.</p>`;
+    eventGrid.innerHTML = "";
+    if (emptyState) emptyState.hidden = true;
+    return null;
+  }
 }
 
-/** Wires the on-page search box: live filtering + its own suggestion dropdown. */
+/** Rebuilds the suggestion dropdown from a runSearch() result. */
+function renderSearchSuggestions(query, results) {
+  const list = document.getElementById("resultsSuggestions");
+  if (!list) return;
+
+  const q = query.trim();
+  if (!q) {
+    list.classList.remove("active");
+    list.innerHTML = "";
+    return;
+  }
+  if (!results) return; // the search failed; leave whatever suggestions were showing
+
+  const suggestions = [
+    ...results.movies.map((m) => ({ title: m.title, href: `movie-details.html?id=${encodeURIComponent(m._id)}` })),
+    ...results.events.map((e) => ({ title: e.title, href: "#" })),
+  ];
+
+  list.innerHTML = suggestions.length
+    ? suggestions.map((item) => `<li><a href="${escapeHTML(item.href)}">${escapeHTML(item.title)}</a></li>`).join("")
+    : `<li><a href="#">No results for "${escapeHTML(query)}"</a></li>`;
+  list.classList.add("active");
+}
+
+/** Wires the on-page search box: debounced live search + its own suggestion dropdown. */
 function setupResultsSearch() {
   const input = document.getElementById("resultsSearchInput");
   const list = document.getElementById("resultsSuggestions");
   if (!input) return;
 
+  const search = async (value) => {
+    const results = await runSearch(value);
+    renderSearchSuggestions(value, results);
+  };
+  const debouncedSearch = debounce(search, 300);
+
   const initialQuery = getQueryParam("q");
   if (initialQuery) input.value = initialQuery;
-  runSearch(initialQuery);
+  search(initialQuery);
 
   input.addEventListener("input", () => {
-    runSearch(input.value);
-
-    const q = input.value.trim().toLowerCase();
-    if (!q) {
+    if (!input.value.trim() && list) {
       list.classList.remove("active");
       list.innerHTML = "";
-      return;
     }
-
-    const suggestions = [...ALL_MOVIES, ...ALL_EVENTS].filter((item) =>
-      item.title.toLowerCase().includes(q)
-    );
-
-    list.innerHTML = suggestions.length
-      ? suggestions
-          .map((item) => `<li><a href="#">${item.title}</a></li>`)
-          .join("")
-      : `<li><a href="#">No results for "${input.value}"</a></li>`;
-    list.classList.add("active");
+    debouncedSearch(input.value);
   });
 
   document.addEventListener("click", (e) => {
-    if (!e.target.closest(".results-search-box")) {
+    if (list && !e.target.closest(".results-search-box")) {
       list.classList.remove("active");
     }
   });
@@ -105,30 +119,50 @@ function getCheckedValues(groupName) {
   );
 }
 
-/** Applies the language/genre/format/price/rating filters and re-renders the grid. */
-function applyMovieFilters() {
+// Bumped on every request; a response is discarded if a newer one has since started.
+let movieFilterRequestId = 0;
+
+/** Reads the filter panel and calls GET /movies, then re-renders the grid. */
+async function applyMovieFilters() {
+  const grid = document.getElementById("movieListingGrid");
+  if (!grid) return;
+
   const languages = getCheckedValues("filterLanguage");
   const genres = getCheckedValues("filterGenre");
   const formats = getCheckedValues("filterFormat");
-  const maxPrice = Number(document.getElementById("priceRange")?.value ?? 500);
   const minRating = Number(getCheckedValues("filterRating")[0] ?? 0);
+  const priceRange = document.getElementById("priceRange");
 
-  const filtered = ALL_MOVIES.filter((movie) => {
-    if (languages.length && !languages.includes(movie.language)) return false;
-    if (genres.length && !genres.includes(movie.genre)) return false;
-    if (formats.length && !formats.includes(movie.format)) return false;
-    if (movie.price > maxPrice) return false;
-    if (movie.ratingValue < minRating) return false;
-    return true;
-  });
+  const params = new URLSearchParams();
+  if (languages.length) params.set("language", languages.join(","));
+  if (genres.length) params.set("genre", genres.join(","));
+  if (formats.length) params.set("format", formats.join(","));
+  if (minRating > 0) params.set("minRating", String(minRating));
+  // Only send a price cap once the slider has actually been moved below its max.
+  if (priceRange && Number(priceRange.value) < Number(priceRange.max)) {
+    params.set("maxPrice", priceRange.value);
+  }
 
-  renderCardRow("movieListingGrid", filtered);
+  const emptyState = document.getElementById("listingEmptyState");
+  const requestId = ++movieFilterRequestId;
+  grid.innerHTML = `<p class="list-message">Loading movies&hellip;</p>`;
+  if (emptyState) emptyState.hidden = true;
 
-  const noResults = document.getElementById("listingEmptyState");
-  if (noResults) noResults.hidden = filtered.length !== 0;
+  try {
+    const movies = await apiGet(`/movies?${params.toString()}`);
+    if (requestId !== movieFilterRequestId) return; // a newer request has since started
 
-  const countEl = document.getElementById("resultCount");
-  if (countEl) countEl.textContent = `${filtered.length} movie${filtered.length === 1 ? "" : "s"}`;
+    renderCardRow("movieListingGrid", movies.map(movieToCard));
+    if (emptyState) emptyState.hidden = movies.length !== 0;
+
+    const countEl = document.getElementById("resultCount");
+    if (countEl) countEl.textContent = `${movies.length} movie${movies.length === 1 ? "" : "s"}`;
+  } catch (err) {
+    if (requestId !== movieFilterRequestId) return;
+    console.error(err);
+    grid.innerHTML = `<p class="list-message">Couldn't load movies. Please try again.</p>`;
+    if (emptyState) emptyState.hidden = true;
+  }
 }
 
 /** Wires every filter control on the Movie Listing page to re-run the filter live. */
@@ -142,10 +176,11 @@ function setupMovieListingFilters() {
 
   const priceRange = document.getElementById("priceRange");
   const priceLabel = document.getElementById("priceRangeLabel");
+  const debouncedApply = debounce(applyMovieFilters, 250);
   if (priceRange) {
     priceRange.addEventListener("input", () => {
       if (priceLabel) priceLabel.textContent = `Up to ₹${priceRange.value}`;
-      applyMovieFilters();
+      debouncedApply();
     });
   }
 
@@ -185,42 +220,137 @@ function setupExpandableDescription() {
   });
 }
 
+/** Builds one cast/crew person card's markup. `role` is omitted for cast. */
+function personCardHTML(person) {
+  const roleLine = person.role ? `<br /><small>${escapeHTML(person.role)}</small>` : "";
+  return `
+    <div class="person-card">
+      <img src="${escapeHTML(person.photo || "")}" alt="" />
+      <span>${escapeHTML(person.name)}${roleLine}</span>
+    </div>`;
+}
+
+/** Fills the Movie Details page from a fetched movie document. */
+function renderMovieDetails(movie) {
+  const banner = document.getElementById("detailsBanner");
+  const poster = document.getElementById("detailsPoster");
+  const bookBtn = document.getElementById("bookTicketsBtn");
+
+  if (banner) banner.style.backgroundImage = `url('${movie.banner || movie.poster}')`;
+  if (poster) {
+    poster.src = movie.poster || "";
+    poster.alt = `${movie.title} poster`;
+  }
+
+  setText(document.getElementById("detailsTitle"), movie.title);
+  document.title = `BookMyShow Clone — ${movie.title}`;
+
+  const tags = document.getElementById("detailsTags");
+  if (tags) {
+    const genreTags = (movie.genres || [])
+      .map((g) => `<span class="tag">${escapeHTML(g)}</span>`)
+      .join("");
+    tags.innerHTML = `<span class="tag-rating">&#9733; ${formatRating(movie.rating)}/10</span>${genreTags}`;
+  }
+
+  const meta = document.getElementById("detailsMetaLine");
+  if (meta) {
+    const parts = [
+      formatDuration(movie.duration),
+      movie.languages?.join(", "),
+      movie.releaseDate ? `Released ${formatDate(movie.releaseDate)}` : "",
+    ].filter(Boolean);
+    setText(meta, parts.join(" • "));
+  }
+
+  setText(document.getElementById("aboutText"), movie.description || "");
+
+  const castRow = document.getElementById("castRow");
+  if (castRow) {
+    castRow.innerHTML = (movie.cast || []).map(personCardHTML).join("")
+      || `<p class="list-message">No cast listed.</p>`;
+  }
+
+  const crewRow = document.getElementById("crewRow");
+  if (crewRow) {
+    crewRow.innerHTML = (movie.crew || []).map(personCardHTML).join("")
+      || `<p class="list-message">No crew listed.</p>`;
+  }
+
+  if (bookBtn) {
+    bookBtn.disabled = false;
+    bookBtn.onclick = () => {
+      window.location.href = `show-timings.html?movieId=${encodeURIComponent(movie._id)}`;
+    };
+  }
+}
+
+/** Shows a friendly "not found" state when the movie id is missing or invalid. */
+function renderMovieNotFound() {
+  setText(document.getElementById("detailsTitle"), "Movie not found");
+  setText(document.getElementById("detailsMetaLine"), "");
+  setText(document.getElementById("aboutText"), "We couldn't find this movie. It may have been removed.");
+
+  const tags = document.getElementById("detailsTags");
+  if (tags) tags.innerHTML = "";
+  const castRow = document.getElementById("castRow");
+  if (castRow) castRow.innerHTML = "";
+  const crewRow = document.getElementById("crewRow");
+  if (crewRow) crewRow.innerHTML = "";
+
+  const poster = document.getElementById("detailsPoster");
+  if (poster) poster.removeAttribute("src");
+  const banner = document.getElementById("detailsBanner");
+  if (banner) banner.style.backgroundImage = "none";
+  const bookBtn = document.getElementById("bookTicketsBtn");
+  if (bookBtn) bookBtn.disabled = true;
+}
+
+/** Loads the Movie Details page from ?id=, or shows "Movie not found". */
+async function loadMovieDetails() {
+  const movieId = getQueryParam("id");
+
+  try {
+    if (!movieId) throw new Error("No movie id in URL");
+    const movie = await apiGet(`/movies/${encodeURIComponent(movieId)}`);
+    renderMovieDetails(movie);
+  } catch (err) {
+    console.error(err);
+    renderMovieNotFound();
+  }
+}
+
+/** Starts the Movie Details page (does nothing on other pages). */
+function initMovieDetails() {
+  if (!document.getElementById("detailsBanner")) return;
+  loadMovieDetails();
+}
+
 /* ==========================================================================
    Show Timings page
    ========================================================================== */
 
-const THEATRES = [
-  {
-    name: "PVR Cinemas: Phoenix Mall",
-    address: "Phoenix Marketcity, Kurla West, Mumbai",
-    languages: ["English", "Hindi"],
-    formats: ["IMAX", "2D"],
-    times: ["10:30 AM", "1:45 PM", "5:00 PM", "8:30 PM"],
-  },
-  {
-    name: "INOX: R-City",
-    address: "R-City Mall, Ghatkopar West, Mumbai",
-    languages: ["Hindi"],
-    formats: ["2D"],
-    times: ["11:00 AM", "2:15 PM", "6:00 PM"],
-  },
-  {
-    name: "Cinepolis: Fun Republic",
-    address: "Fun Republic Mall, Andheri West, Mumbai",
-    languages: ["English"],
-    formats: ["3D", "2D"],
-    times: ["12:00 PM", "3:30 PM", "7:15 PM", "10:00 PM"],
-  },
-];
+// Filled from the API. This used to be a hardcoded array.
+let THEATRES = [];
 
-/** Builds the next 7 days as { day: "Mon", num: "12" } pills, today first. */
+// Which movie? Read from the URL: show-timings.html?movieId=m1
+const SHOW_MOVIE_ID = getQueryParam("movieId") || "m1";
+
+// Currently selected date as "YYYY-MM-DD" (set in initShowTimings)
+let selectedDate = "";
+
+/** Builds the next 7 days as { day, num, value } pills, today first. */
 function buildUpcomingDates() {
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const dates = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date();
     d.setDate(d.getDate() + i);
-    dates.push({ day: i === 0 ? "Today" : days[d.getDay()], num: d.getDate() });
+    dates.push({
+      day: i === 0 ? "Today" : days[d.getDay()],
+      num: d.getDate(),
+      value: toLocalDateString(d), // "YYYY-MM-DD", sent to the API
+    });
   }
   return dates;
 }
@@ -232,7 +362,7 @@ function renderDateSelector() {
   wrap.innerHTML = buildUpcomingDates()
     .map(
       (d, i) => `
-        <div class="date-pill${i === 0 ? " selected" : ""}" data-index="${i}">
+        <div class="date-pill${i === 0 ? " selected" : ""}" data-date="${d.value}">
           <span class="date-day">${d.day}</span>
           <span class="date-num">${d.num}</span>
         </div>`
@@ -243,14 +373,44 @@ function renderDateSelector() {
     pill.addEventListener("click", () => {
       wrap.querySelectorAll(".date-pill").forEach((p) => p.classList.remove("selected"));
       pill.classList.add("selected");
-      // Showtimes are dummy/static regardless of date in this frontend-only demo.
+      selectedDate = pill.dataset.date;
+      loadShows(); // fetch that day's shows from the backend
     });
   });
+}
+
+/** Fetches the shows for the selected movie + date, then draws them. */
+async function loadShows() {
+  const wrap = document.getElementById("theatreList");
+  if (!wrap) return;
+
+  const requestedDate = selectedDate;
+  wrap.innerHTML = `<p class="theatre-message">Loading showtimes…</p>`;
+
+  try {
+    const data = await apiGet(
+      `/shows?movieId=${encodeURIComponent(SHOW_MOVIE_ID)}&date=${requestedDate}`
+    );
+    // If the user clicked another date while this was loading, ignore the old response
+    if (requestedDate !== selectedDate) return;
+
+    THEATRES = data;
+    renderTheatreList();
+  } catch (err) {
+    if (requestedDate !== selectedDate) return;
+    console.error(err);
+    wrap.innerHTML = `<p class="theatre-message">Couldn't load showtimes. Please try again.</p>`;
+  }
 }
 
 function renderTheatreList() {
   const wrap = document.getElementById("theatreList");
   if (!wrap) return;
+
+  if (THEATRES.length === 0) {
+    wrap.innerHTML = `<p class="theatre-message">No shows available on this date.</p>`;
+    return;
+  }
 
   wrap.innerHTML = THEATRES.map(
     (theatre) => `
@@ -264,29 +424,64 @@ function renderTheatreList() {
           ${theatre.formats.map((f) => `<span class="badge">${f}</span>`).join("")}
         </div>
         <div class="showtime-row">
-          ${theatre.times
-            .map((t) => `<button type="button" class="showtime-btn">${t}</button>`)
+          ${theatre.shows
+            .map(
+              (s) => `<button type="button" class="showtime-btn"
+                        data-show-id="${s.id}"
+                        title="${s.language} · ${s.format}">${s.time}</button>`
+            )
             .join("")}
         </div>
       </article>`
   ).join("");
 
-  // Highlight the clicked showtime, then move on to seat selection.
+  // Highlight the clicked showtime, then go to seat selection for THAT show.
   wrap.querySelectorAll(".showtime-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       wrap
         .querySelectorAll(".showtime-btn.selected")
         .forEach((b) => b.classList.remove("selected"));
       btn.classList.add("selected");
-      window.location.href = "seat-selection.html";
+      window.location.href = `seat-selection.html?showId=${btn.dataset.showId}`;
     });
   });
+}
+
+/** Loads the movie's title/languages/genres into the page header. */
+async function loadShowTimingsHeader() {
+  const titleEl = document.getElementById("movieTitle");
+  const metaEl = document.getElementById("movieMetaLine");
+  if (!titleEl) return;
+
+  try {
+    const movie = await apiGet(`/movies/${encodeURIComponent(SHOW_MOVIE_ID)}`);
+    titleEl.textContent = movie.title;
+    if (metaEl) {
+      const parts = [];
+      if (movie.languages?.length) parts.push(movie.languages.join(", "));
+      if (movie.genres?.length) parts.push(movie.genres.join(", "));
+      metaEl.textContent = parts.join(" • ");
+    }
+  } catch (err) {
+    console.error(err);
+    titleEl.textContent = "Movie not found";
+    if (metaEl) metaEl.textContent = "";
+  }
+}
+
+/** Starts the Show Timings page (does nothing on other pages). */
+function initShowTimings() {
+  if (!document.getElementById("theatreList")) return;
+  selectedDate = toLocalDateString(new Date());
+  loadShowTimingsHeader();
+  renderDateSelector();
+  loadShows();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   setupResultsSearch();
   setupMovieListingFilters();
   setupExpandableDescription();
-  renderDateSelector();
-  renderTheatreList();
+  initMovieDetails();
+  initShowTimings();
 });

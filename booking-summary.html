@@ -17,12 +17,12 @@
     <div class="summary-layout">
       <!-- Show details -->
       <section class="summary-card show-card">
-        <img class="summary-poster" src="https://images.unsplash.com/photo-1517602302552-471fe67acf66?w=300&q=80" alt="The Last Signal poster" />
+        <img class="summary-poster" id="summaryPoster" src="" alt="" />
         <div class="show-card-info">
-          <h2>The Last Signal</h2>
-          <p class="details-meta-line-dark">English, Hindi &bull; IMAX &bull; UA</p>
-          <p class="show-card-venue">PVR Cinemas: Phoenix Mall</p>
-          <p class="details-meta-line-dark" id="showDateTime">Today, 8:30 PM</p>
+          <h2 id="summaryMovieTitle">Loading&hellip;</h2>
+          <p class="details-meta-line-dark" id="summaryMetaLine"></p>
+          <p class="show-card-venue" id="summaryVenue"></p>
+          <p class="details-meta-line-dark" id="showDateTime"></p>
         </div>
       </section>
 
@@ -68,6 +68,7 @@
   <div id="footer"></div>
 
   <script src="js/common.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/booking.js"></script>
 </body>
 </html>
