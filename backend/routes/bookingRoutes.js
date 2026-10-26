@@ -8,23 +8,25 @@ const Payment = require('../models/Payment');
 const { buildShowSummary } = require('../utils/showSummary');
 const { MIN_SEATS_PER_BOOKING, MAX_SEATS_PER_BOOKING, computePricing } = require('../utils/pricing');
 const { generateId } = require('../utils/ids');
-const { GUEST_USER_ID } = require('../utils/currentUser');
+const { requireAuth } = require('../middleware/auth');
+
+// Every booking route needs a logged-in user (requireAuth sets req.user).
+router.use(requireAuth);
 
 const PAYMENT_METHODS = ['UPI', 'Credit Card', 'Debit Card', 'Net Banking', 'Wallet'];
 const BOOKING_STATUSES = ['upcoming', 'completed', 'cancelled'];
 
 // GET /api/bookings?userId=&status= — newest first, one row per booking with
-// enough show detail for the history list. `userId` defaults to the guest
-// placeholder until the auth cycle replaces it with the logged-in user's id.
+// enough show detail for the history list. Only the logged-in user's bookings.
 router.get('/', async (req, res) => {
   try {
-    const { userId = GUEST_USER_ID, status } = req.query;
+    const { status } = req.query;
 
     if (status && !BOOKING_STATUSES.includes(status)) {
       return res.status(400).json({ error: `status must be one of ${BOOKING_STATUSES.join(', ')}` });
     }
 
-    const filter = { userId };
+    const filter = { userId: req.user._id };
     if (status) filter.bookingStatus = status;
 
     const bookings = await Booking.find(filter).sort({ bookedAt: -1 });
@@ -166,7 +168,7 @@ router.post('/', async (req, res) => {
       await Booking.create(
         [{
           _id: bookingId,
-          userId: GUEST_USER_ID,
+          userId: req.user._id,
           showId: show._id,
           seatIds,
           totalAmount: grandTotal,
@@ -197,11 +199,68 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Turns a show's stored date (local midnight) + "10:30 AM" into the moment the show starts.
+function getShowStart(show) {
+  const start = new Date(show.showDate);
+  const match = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(show.showTime || '');
+  if (!match) return start;
+  let hours = Number(match[1]) % 12;
+  if (match[3].toUpperCase() === 'PM') hours += 12;
+  start.setHours(hours, Number(match[2]), 0, 0);
+  return start;
+}
+
+// PATCH /api/bookings/:id/cancel — cancels the logged-in user's own upcoming booking.
+// In one transaction: booking -> cancelled, seats -> available again, payment -> refunded.
+// The booking update only matches while the status is still 'upcoming', so pressing
+// Cancel twice (or in two tabs) can never free the seats or refund twice.
+router.patch('/:id/cancel', async (req, res) => {
+  const session = await mongoose.startSession();
+
+  try {
+    const booking = await Booking.findById(req.params.id);
+    if (!booking || booking.userId !== req.user._id) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    if (booking.bookingStatus !== 'upcoming') {
+      return res.status(409).json({ error: `This booking is already ${booking.bookingStatus}` });
+    }
+
+    const show = await Show.findById(booking.showId);
+    if (show && getShowStart(show) <= new Date()) {
+      return res.status(409).json({ error: 'This show has already started, so it can no longer be cancelled' });
+    }
+
+    await session.withTransaction(async () => {
+      const cancelled = await Booking.findOneAndUpdate(
+        { _id: booking._id, userId: req.user._id, bookingStatus: 'upcoming' },
+        { $set: { bookingStatus: 'cancelled' } },
+        { session }
+      );
+      if (!cancelled) {
+        const err = new Error('This booking was already cancelled');
+        err.status = 409;
+        throw err;
+      }
+
+      await Seat.updateMany({ _id: { $in: booking.seatIds } }, { $set: { status: 'available' } }, { session });
+      await Payment.updateOne({ bookingId: booking._id }, { $set: { paymentStatus: 'refunded' } }, { session });
+    });
+
+    res.json({ id: booking._id, bookingStatus: 'cancelled' });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  } finally {
+    await session.endSession();
+  }
+});
+
 // GET /api/bookings/:id — full booking detail for the confirmation page.
 router.get('/:id', async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id);
-    if (!booking) {
+    // Someone else's booking looks exactly like a missing one.
+    if (!booking || booking.userId !== req.user._id) {
       return res.status(404).json({ error: 'Booking not found' });
     }
 

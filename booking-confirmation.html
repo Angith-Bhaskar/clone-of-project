@@ -14,8 +14,8 @@
   <main class="container confirmation-page">
     <div class="confirmation-card">
       <div class="success-icon">&#10003;</div>
-      <h1>Booking Confirmed!</h1>
-      <p class="details-meta-line-dark">Your tickets are booked. Enjoy the show!</p>
+      <h1 id="confirmationTitle">Booking Confirmed!</h1>
+      <p class="details-meta-line-dark" id="confirmationSubtitle">Your tickets are booked. Enjoy the show!</p>
 
       <div class="booking-id-row">
         <span>Booking ID: <strong id="bookingIdLabel">&mdash;</strong></span>
@@ -66,6 +66,9 @@
           <span id="confirmationAmount">&mdash;</span>
         </div>
       </div>
+
+      <p class="field-error" id="cancelMessage"></p>
+      <button type="button" class="btn btn-outline btn-block" id="cancelBookingBtn" hidden>Cancel Booking</button>
 
       <a href="index.html" class="btn btn-primary btn-block">Back to Home</a>
       <a href="booking-history.html" class="auth-link view-bookings-link">View My Bookings</a>

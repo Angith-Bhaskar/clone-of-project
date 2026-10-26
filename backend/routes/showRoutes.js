@@ -4,6 +4,7 @@ const Show = require('../models/Show');
 const Theatre = require('../models/Theatre');
 const Seat = require('../models/Seat');
 const { buildShowSummary } = require('../utils/showSummary');
+const { escapeRegex } = require('../utils/queryHelpers');
 
 const SEAT_CATEGORY_ORDER = ['Platinum', 'Gold', 'Silver'];
 
@@ -16,10 +17,10 @@ const toMinutes = (t) => {
   return h * 60 + m;
 };
 
-// GET /api/shows?movieId=m1&date=2026-09-28
+// GET /api/shows?movieId=m1&date=2026-09-28&city=Mumbai
 router.get('/', async (req, res) => {
   try {
-    const { movieId, date } = req.query;
+    const { movieId, date, city } = req.query;
 
     if (!movieId) {
       return res.status(400).json({ error: 'movieId is required' });
@@ -34,10 +35,15 @@ router.get('/', async (req, res) => {
     const end = new Date(start);
     end.setDate(end.getDate() + 1);
 
-    const shows = await Show.find({
-      movieId,
-      showDate: { $gte: start, $lt: end }
-    }).populate('theatreId');
+    const showFilter = { movieId, showDate: { $gte: start, $lt: end } };
+
+    // Optional city: only shows at theatres located in that city.
+    if (city) {
+      const theatreIds = await Theatre.distinct('_id', { city: { $regex: '^' + escapeRegex(city) + '$', $options: 'i' } });
+      showFilter.theatreId = { $in: theatreIds };
+    }
+
+    const shows = await Show.find(showFilter).populate('theatreId');
 
     // Group the flat list of shows by theatre
     const grouped = new Map();

@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
-const { GUEST_USER_ID } = require('../utils/currentUser');
 
 const bookingSchema = new mongoose.Schema({
   _id: String,
-  userId: { type: String, default: GUEST_USER_ID },
+  userId: { type: String, required: true },
   showId: { type: String, ref: 'Show', required: true },
   seatIds: [{ type: String, ref: 'Seat' }],
   totalAmount: { type: Number, required: true },

@@ -1,36 +1,88 @@
 /* ==========================================================================
    api.js
-   Single shared frontend toolkit: API access, small DOM/formatting helpers,
-   and mappers from API shapes to the object shape mediaCardHTML() expects.
+   Single shared frontend toolkit: API access, login session helpers, small
+   DOM/formatting helpers, and mappers from API shapes to the object shape
+   mediaCardHTML() expects.
    Must be loaded (via <script>) on every data-driven page, after common.js
    and BEFORE that page's own script file.
    ========================================================================== */
 
 const API_BASE = 'http://localhost:5000/api';
 
-/** GET helper. Throws an Error (with a numeric .status) on a non-OK response. */
-async function apiGet(path) {
-  const res = await fetch(`${API_BASE}${path}`);
+/* ---- Login session -----------------------------------------------------------
+   After login/register the server returns a JWT and the user's public info.
+   Both live in localStorage so the session survives refreshes and new tabs.
+   The token is sent on every request as "Authorization: Bearer <token>". */
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    const err = new Error(body.error || `Request failed (${res.status})`);
-    err.status = res.status;
-    throw err;
-  }
+const TOKEN_KEY = 'bms_token';
+const USER_KEY = 'bms_user';
 
-  return res.json();
+function getAuthToken() {
+  try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
 }
 
-/** POST helper. Sends `body` as JSON. Throws an Error (with .status) on a non-OK response. */
-async function apiPost(path, body) {
+/** The logged-in user's { id, name, email, phone } or null. UI display only; the server re-checks the token. */
+function getCurrentUser() {
+  try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch { return null; }
+}
+
+function saveSession(token, user) {
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
+function saveCurrentUser(user) {
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
+function clearSession() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+}
+
+function isLoggedIn() {
+  return Boolean(getAuthToken());
+}
+
+/** Sends the visitor to login.html and brings them back to `nextPage` afterwards (default: the current page). */
+function redirectToLogin(nextPage) {
+  const next = nextPage || (window.location.pathname.split('/').pop() + window.location.search);
+  window.location.href = `login.html?next=${encodeURIComponent(next)}`;
+}
+
+/** Page guard: returns true if logged in; otherwise redirects to login and returns false. */
+function requireLogin(nextPage) {
+  if (isLoggedIn()) return true;
+  redirectToLogin(nextPage);
+  return false;
+}
+
+function logout() {
+  clearSession();
+  window.location.href = 'index.html';
+}
+
+/* ---- HTTP helpers --------------------------------------------------------------- */
+
+/** One place for fetch + auth header + error handling. Throws an Error (with numeric .status) on a non-OK response. */
+async function apiRequest(method, path, body) {
+  const headers = {};
+  const token = getAuthToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+
   const res = await fetch(`${API_BASE}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body ?? {}),
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
 
   if (!res.ok) {
+    // A 401 while we were holding a token means it expired or is invalid -> log out and ask for a fresh login.
+    if (res.status === 401 && token && !path.startsWith('/auth/')) {
+      clearSession();
+      redirectToLogin();
+    }
     const responseBody = await res.json().catch(() => ({}));
     const err = new Error(responseBody.error || `Request failed (${res.status})`);
     err.status = res.status;
@@ -38,6 +90,18 @@ async function apiPost(path, body) {
   }
 
   return res.json();
+}
+
+function apiGet(path) {
+  return apiRequest('GET', path);
+}
+
+function apiPost(path, body) {
+  return apiRequest('POST', path, body ?? {});
+}
+
+function apiPut(path, body) {
+  return apiRequest('PUT', path, body ?? {});
 }
 
 /* ---- Date helpers -------------------------------------------------------- */

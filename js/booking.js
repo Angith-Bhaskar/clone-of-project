@@ -1,157 +1,10 @@
 /* ==========================================================================
    booking.js
-   Shared across seat-selection, booking-summary, payment, booking-confirmation.
-   Seat Selection loads the show + seat map from the API (js/api.js) and
-   hands off { showId, seatIds } to later pages via sessionStorage["bookingDraft"].
+   Shared across booking-summary, payment, booking-confirmation.
+   (Seat Selection is now a React page: react-app/src/seat-selection.)
+   The Seat Selection page hands off { showId, seatIds } to these pages via
+   sessionStorage["bookingDraft"].
    ========================================================================== */
-
-const MAX_SEATS_PER_BOOKING = 10;
-
-let currentShowId = "";
-let selectedSeats = []; // [{ id, label, category, price }]
-
-/** Starts the Seat Selection page (does nothing on other pages). */
-async function initSeatSelection() {
-  const wrap = document.getElementById("seatLayout");
-  if (!wrap) return;
-
-  currentShowId = getQueryParam("showId");
-  setupSeatLayoutDelegation();
-  setupProceedButton();
-  updateBookingBar();
-
-  if (!currentShowId) {
-    renderSeatMessage("No show selected. Please go back and pick a showtime.");
-    return;
-  }
-
-  renderSeatMessage("Loading seats&hellip;");
-
-  try {
-    const [show, categories] = await Promise.all([
-      apiGet(`/shows/${encodeURIComponent(currentShowId)}`),
-      apiGet(`/shows/${encodeURIComponent(currentShowId)}/seats`),
-    ]);
-    renderShowHeader(show);
-    renderSeatLayout(categories);
-  } catch (err) {
-    console.error(err);
-    renderSeatMessage("Couldn't load seats. Please try again.");
-  }
-}
-
-/** Fills the page header (movie, theatre, date/time, format) from the show summary. */
-function renderShowHeader(show) {
-  setText(document.getElementById("seatShowTitle"), show.movie?.title || "");
-  const parts = [
-    show.theatre?.name,
-    [formatDate(show.showDate), show.showTime].filter(Boolean).join(", "),
-    show.format,
-  ].filter(Boolean);
-  setText(document.getElementById("seatShowMeta"), parts.join(" • "));
-}
-
-/** Replaces the seat layout with a plain status message (loading/empty/error). */
-function renderSeatMessage(message) {
-  const wrap = document.getElementById("seatLayout");
-  if (wrap) wrap.innerHTML = `<p class="list-message">${message}</p>`;
-}
-
-/** Builds the seat grid markup from GET /shows/:id/seats' grouped categories. */
-function renderSeatLayout(categories) {
-  const wrap = document.getElementById("seatLayout");
-  if (!wrap) return;
-
-  wrap.innerHTML = categories.map((category) => `
-    <div class="seat-category">
-      <div class="seat-category-label">${escapeHTML(category.category)}</div>
-      <div class="seat-category-price">${formatRupees(category.price)} per ticket</div>
-      ${category.rows
-        .map(
-          (row) => `
-        <div class="seat-row">
-          <span class="seat-row-label">${escapeHTML(row.row)}</span>
-          <div class="seat-row-seats">
-            ${row.seats
-              .map((seat) => {
-                const booked = seat.status === "booked";
-                return `<button type="button" class="seat${booked ? " booked" : ""}"
-                          data-id="${escapeHTML(seat.id)}" data-label="${escapeHTML(row.row + seat.number)}"
-                          data-category="${escapeHTML(category.category)}" data-price="${category.price}"
-                          ${booked ? "disabled" : ""}>${seat.number}</button>`;
-              })
-              .join("")}
-          </div>
-        </div>`
-        )
-        .join("")}
-    </div>
-  `).join("");
-}
-
-/** One delegated click handler for the whole seat grid (set up once, survives re-renders). */
-function setupSeatLayoutDelegation() {
-  const wrap = document.getElementById("seatLayout");
-  if (!wrap) return;
-
-  wrap.addEventListener("click", (e) => {
-    const seatEl = e.target.closest(".seat");
-    if (!seatEl || seatEl.classList.contains("booked")) return;
-    toggleSeat(seatEl);
-  });
-}
-
-/** Selects/deselects a single seat (capped at MAX_SEATS_PER_BOOKING) and refreshes the summary bar. */
-function toggleSeat(seatEl) {
-  const id = seatEl.dataset.id;
-  const isSelected = seatEl.classList.contains("selected");
-
-  if (!isSelected && selectedSeats.length >= MAX_SEATS_PER_BOOKING) {
-    return; // display-only cap; the server enforces this for real
-  }
-
-  seatEl.classList.toggle("selected");
-
-  if (!isSelected) {
-    selectedSeats.push({
-      id,
-      label: seatEl.dataset.label,
-      category: seatEl.dataset.category,
-      price: Number(seatEl.dataset.price),
-    });
-  } else {
-    selectedSeats = selectedSeats.filter((s) => s.id !== id);
-  }
-
-  updateBookingBar();
-}
-
-/** Recomputes the live (display-only) total and enables/disables the Proceed button. */
-function updateBookingBar() {
-  const countLabel = document.getElementById("seatCountLabel");
-  const totalLabel = document.getElementById("seatTotalLabel");
-  const proceedBtn = document.getElementById("proceedBtn");
-  if (!countLabel) return;
-
-  const total = selectedSeats.reduce((sum, s) => sum + s.price, 0);
-
-  countLabel.textContent = `${selectedSeats.length} Ticket${selectedSeats.length === 1 ? "" : "s"}`;
-  totalLabel.textContent = formatRupees(total);
-  if (proceedBtn) proceedBtn.disabled = selectedSeats.length === 0;
-}
-
-/** Persists { showId, seatIds } for booking-summary.html to read, then navigates. */
-function setupProceedButton() {
-  const proceedBtn = document.getElementById("proceedBtn");
-  if (!proceedBtn) return;
-
-  proceedBtn.addEventListener("click", () => {
-    if (selectedSeats.length === 0) return;
-    const draft = { showId: currentShowId, seatIds: selectedSeats.map((s) => s.id) };
-    sessionStorage.setItem("bookingDraft", JSON.stringify(draft));
-    window.location.href = "booking-summary.html";
-  });
-}
 
 /* ==========================================================================
    Booking Summary page
@@ -354,6 +207,45 @@ function renderConfirmationDetails(booking) {
   );
   setText(document.getElementById("confirmationSeats"), booking.seats?.length ? booking.seats.join(", ") : "—");
   setText(document.getElementById("confirmationAmount"), formatRupees(booking.amount));
+  renderCancellationState(booking.bookingStatus);
+}
+
+/** Switches the confirmation card between "confirmed" and "cancelled" wording and shows Cancel only while upcoming. */
+function renderCancellationState(status) {
+  const cancelled = status === "cancelled";
+  setText(document.getElementById("confirmationTitle"), cancelled ? "Booking Cancelled" : "Booking Confirmed!");
+  setText(
+    document.getElementById("confirmationSubtitle"),
+    cancelled ? "This booking was cancelled and your payment has been refunded." : "Your tickets are booked. Enjoy the show!"
+  );
+  setText(document.querySelector(".confirmation-row:last-child .confirmation-label"), cancelled ? "Amount Refunded" : "Amount Paid");
+
+  const cancelBtn = document.getElementById("cancelBookingBtn");
+  if (cancelBtn) cancelBtn.hidden = status !== "upcoming";
+}
+
+/** Cancel Booking button: confirm, call PATCH /bookings/:id/cancel, then update the page in place. */
+function setupCancelBooking(bookingId) {
+  const btn = document.getElementById("cancelBookingBtn");
+  const message = document.getElementById("cancelMessage");
+  if (!btn) return;
+
+  btn.addEventListener("click", async () => {
+    if (!window.confirm("Cancel this booking? Your seats will be released and the amount refunded.")) return;
+
+    message.textContent = "";
+    btn.disabled = true;
+    btn.textContent = "Cancelling…";
+    try {
+      await apiRequest("PATCH", `/bookings/${encodeURIComponent(bookingId)}/cancel`, {});
+      renderCancellationState("cancelled");
+    } catch (err) {
+      message.textContent = err.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Cancel Booking";
+    }
+  });
 }
 
 /** Replaces the confirmation card with a "not found" message. */
@@ -404,6 +296,7 @@ async function setupConfirmationPage() {
     const booking = await apiGet(`/bookings/${encodeURIComponent(bookingId)}`);
     renderConfirmationDetails(booking);
     setupCopyBookingId();
+    setupCancelBooking(bookingId);
   } catch (err) {
     console.error(err);
     renderBookingNotFound();
@@ -411,7 +304,9 @@ async function setupConfirmationPage() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  initSeatSelection();
+  // Summary, payment and confirmation pages are for logged-in users only.
+  const loginOnly = ["booking-summary.html", "payment.html", "booking-confirmation.html"];
+  if (loginOnly.some((page) => window.location.pathname.endsWith(page)) && !requireLogin()) return;
 
   setupBookingSummaryPage();
 

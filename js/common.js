@@ -7,13 +7,17 @@
    escapeHTML from js/api.js by the time DOMContentLoaded fires).
    ========================================================================== */
 
-/* Dummy city list used by the city selector dropdown (frontend-only).
-   Known gap (CLAUDE.md section 11): picking a city doesn't filter data —
-   all seeded theatres are in Mumbai regardless of selection. */
-const CITIES = [
-  "Mumbai", "Delhi-NCR", "Bengaluru", "Hyderabad",
-  "Ahmedabad", "Chandigarh", "Chennai", "Pune", "Kolkata", "Kochi"
-];
+/* Cities that have theatres in the database (see backend/seed.js). The picker
+   refreshes this list from GET /api/cities; this copy is the fallback, and
+   what getSelectedCity() validates a saved choice against. */
+let CITIES = ["Mumbai", "Delhi", "Bengaluru", "Chennai"];
+
+/** The city chosen in the navbar (kept in localStorage); falls back to Mumbai if unset or not served. */
+function getSelectedCity() {
+  let saved = null;
+  try { saved = localStorage.getItem("bms_city"); } catch { /* storage blocked */ }
+  return CITIES.includes(saved) ? saved : "Mumbai";
+}
 
 /**
  * Injects the shared navbar markup into #navbar, then wires up its
@@ -23,7 +27,7 @@ function renderNavbar() {
   const mount = document.getElementById("navbar");
   if (!mount) return;
 
-  const savedCity = localStorage.getItem("bms_city") || "Mumbai";
+  const savedCity = getSelectedCity();
 
   mount.innerHTML = `
     <nav class="navbar">
@@ -34,10 +38,13 @@ function renderNavbar() {
 
         <a href="index.html" class="navbar-logo">book<span>my</span>show</a>
 
-        <button class="city-selector" id="citySelector" type="button">
-          <span class="city-label">${savedCity}</span>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-        </button>
+        <div class="city-wrap">
+          <button class="city-selector" id="citySelector" type="button">
+            <span class="city-label">${savedCity}</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <ul class="city-list" id="cityList"></ul>
+        </div>
 
         <div class="navbar-search">
           <input type="text" id="navSearchInput" placeholder="Search for movies, events, plays..." autocomplete="off" />
@@ -45,15 +52,48 @@ function renderNavbar() {
         </div>
 
         <div class="navbar-actions">
-          <a href="login.html" class="btn btn-outline">Sign In</a>
+${navbarAccountHTML()}
         </div>
       </div>
     </nav>
   `;
 
   setupCitySelector();
+  setupUserMenu();
   setupSearchSuggestions();
   setupMenuToggle();
+}
+
+/** Navbar right side: "Sign In" for visitors, a name dropdown (profile / bookings / log out) once logged in. */
+function navbarAccountHTML() {
+  const user = getCurrentUser();
+  if (!isLoggedIn() || !user) {
+    return `<a href="login.html" class="btn btn-outline">Sign In</a>`;
+  }
+
+  const firstName = String(user.name || "Account").split(" ")[0];
+  return `
+    <div class="user-menu">
+      <button type="button" class="btn btn-outline" id="userMenuBtn">Hi, ${escapeHTML(firstName)} &#9662;</button>
+      <ul class="user-menu-list" id="userMenuList">
+        <li><a href="profile.html">My Profile</a></li>
+        <li><a href="booking-history.html">My Bookings</a></li>
+        <li><button type="button" id="logoutBtn">Log Out</button></li>
+      </ul>
+    </div>`;
+}
+
+/** Opens/closes the logged-in dropdown and wires Log Out. No-op for visitors. */
+function setupUserMenu() {
+  const btn = document.getElementById("userMenuBtn");
+  const list = document.getElementById("userMenuList");
+  if (!btn || !list) return;
+
+  btn.addEventListener("click", () => list.classList.toggle("active"));
+  document.getElementById("logoutBtn").addEventListener("click", logout);
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".user-menu")) list.classList.remove("active");
+  });
 }
 
 /**
@@ -105,19 +145,49 @@ function renderFooter() {
   `;
 }
 
-/** Simple dropdown letting the user pick a dummy city; persists to localStorage. */
+/**
+ * City picker: a dropdown under the city button. Choosing a city saves it and reloads
+ * the page, so every data-driven section re-fetches using the new city.
+ */
 function setupCitySelector() {
   const btn = document.getElementById("citySelector");
+  const list = document.getElementById("cityList");
   const label = btn?.querySelector(".city-label");
-  if (!btn) return;
+  if (!btn || !list) return;
 
-  btn.addEventListener("click", () => {
-    // Minimal frontend-only picker: cycle through the list on click.
-    const current = label.textContent;
-    const nextIndex = (CITIES.indexOf(current) + 1) % CITIES.length;
-    const nextCity = CITIES[nextIndex];
-    label.textContent = nextCity;
-    localStorage.setItem("bms_city", nextCity);
+  function renderCityList() {
+    const current = getSelectedCity();
+    list.innerHTML = CITIES.map(
+      (city) => `<li><button type="button" data-city="${escapeHTML(city)}"${city === current ? ' class="active"' : ""}>${escapeHTML(city)}</button></li>`
+    ).join("");
+  }
+
+  renderCityList();
+
+  // Refresh from the API so newly seeded cities appear without a code change.
+  apiGet("/cities")
+    .then((cities) => {
+      if (!Array.isArray(cities) || cities.length === 0) return;
+      CITIES = cities;
+      label.textContent = getSelectedCity();
+      renderCityList();
+    })
+    .catch((err) => console.error(err));
+
+  btn.addEventListener("click", () => list.classList.toggle("active"));
+
+  list.addEventListener("click", (e) => {
+    const choice = e.target.closest("button[data-city]");
+    if (!choice) return;
+    if (choice.dataset.city !== getSelectedCity()) {
+      localStorage.setItem("bms_city", choice.dataset.city);
+      window.location.reload();
+    }
+    list.classList.remove("active");
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".city-wrap")) list.classList.remove("active");
   });
 }
 
@@ -140,7 +210,7 @@ function setupSearchSuggestions() {
       const suffix = `?q=${encodeURIComponent(query)}&limit=5`;
       const [movies, events] = await Promise.all([
         apiGet(`/movies${suffix}`),
-        apiGet(`/events${suffix}`),
+        apiGet(`/events${suffix}&city=${encodeURIComponent(getSelectedCity())}`),
       ]);
 
       const matches = [

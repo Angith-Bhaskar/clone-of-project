@@ -98,8 +98,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setupBannerCarousel();
 
   loadHomeRow("recommendedMovies", () => apiGet("/movies?limit=8"), movieToCard);
-  loadHomeRow("liveEvents", () => apiGet("/events?category=live"), eventToCard);
-  loadHomeRow("premieres", () => apiGet("/events?category=premiere"), eventToCard);
-  loadHomeRow("outdoorEvents", () => apiGet("/events?category=outdoor"), eventToCard);
-  loadHomeRow("laughterShows", () => apiGet("/events?category=laughter"), eventToCard);
+  loadHomeRow("liveEvents", () => apiGet(`/events?category=live&city=${encodeURIComponent(getSelectedCity())}`), eventToCard);
+  loadHomeRow("premieres", () => apiGet(`/events?category=premiere&city=${encodeURIComponent(getSelectedCity())}`), eventToCard);
+  loadHomeRow("outdoorEvents", () => apiGet(`/events?category=outdoor&city=${encodeURIComponent(getSelectedCity())}`), eventToCard);
+  loadHomeRow("laughterShows", () => apiGet(`/events?category=laughter&city=${encodeURIComponent(getSelectedCity())}`), eventToCard);
 });

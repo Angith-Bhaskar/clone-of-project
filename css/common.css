@@ -384,3 +384,88 @@ button {
     display: none;
   }
 }
+
+/* ---- Logged-in user menu (navbar) ----------------------------------------- */
+.user-menu {
+  position: relative;
+}
+
+.user-menu-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 170px;
+  background: #fff;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card-hover);
+  overflow: hidden;
+  display: none;
+  z-index: 200;
+}
+
+.user-menu-list.active {
+  display: block;
+}
+
+.user-menu-list a,
+.user-menu-list button {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  text-align: left;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.user-menu-list a:hover,
+.user-menu-list button:hover {
+  background: var(--color-bg-section);
+}
+
+/* ---- City picker dropdown (navbar) ---------------------------------------- */
+.city-wrap {
+  position: relative;
+}
+
+.city-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 160px;
+  background: #fff;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card-hover);
+  overflow: hidden;
+  display: none;
+  z-index: 200;
+}
+
+.city-list.active {
+  display: block;
+}
+
+.city-list button {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  text-align: left;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.city-list button:hover {
+  background: var(--color-bg-section);
+}
+
+.city-list button.active {
+  color: var(--color-primary);
+  font-weight: 600;
+}

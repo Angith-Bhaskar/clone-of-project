@@ -1,6 +1,7 @@
 /* ==========================================================================
    movies.js
-   Shared across search-results, movies, movie-details, show-timings.
+   Shared across search-results, movie-details, show-timings.
+   (The Movie Listing page is now React: react-app/src/movies.)
    Search Results, Movie Listing and Show Timings all read live data from
    the backend API via js/api.js (loaded before this file: apiGet, apiPost,
    toLocalDateString, getQueryParam, escapeHTML, debounce, movieToCard,
@@ -30,9 +31,10 @@ async function runSearch(query) {
 
   try {
     const suffix = q ? `?q=${encodeURIComponent(q)}` : "";
+    const eventSuffix = `${suffix || "?"}${q ? "&" : ""}city=${encodeURIComponent(getSelectedCity())}`;
     const [movies, events] = await Promise.all([
       apiGet(`/movies${suffix}`),
-      apiGet(`/events${suffix}`),
+      apiGet(`/events${eventSuffix}`),
     ]);
     if (requestId !== searchRequestId) return null; // a newer search has since started
 
@@ -106,102 +108,6 @@ function setupResultsSearch() {
       list.classList.remove("active");
     }
   });
-}
-
-/* ==========================================================================
-   Movie Listing page
-   ========================================================================== */
-
-/** Reads the currently checked values for a filter group by name. */
-function getCheckedValues(groupName) {
-  return [...document.querySelectorAll(`input[name="${groupName}"]:checked`)].map(
-    (el) => el.value
-  );
-}
-
-// Bumped on every request; a response is discarded if a newer one has since started.
-let movieFilterRequestId = 0;
-
-/** Reads the filter panel and calls GET /movies, then re-renders the grid. */
-async function applyMovieFilters() {
-  const grid = document.getElementById("movieListingGrid");
-  if (!grid) return;
-
-  const languages = getCheckedValues("filterLanguage");
-  const genres = getCheckedValues("filterGenre");
-  const formats = getCheckedValues("filterFormat");
-  const minRating = Number(getCheckedValues("filterRating")[0] ?? 0);
-  const priceRange = document.getElementById("priceRange");
-
-  const params = new URLSearchParams();
-  if (languages.length) params.set("language", languages.join(","));
-  if (genres.length) params.set("genre", genres.join(","));
-  if (formats.length) params.set("format", formats.join(","));
-  if (minRating > 0) params.set("minRating", String(minRating));
-  // Only send a price cap once the slider has actually been moved below its max.
-  if (priceRange && Number(priceRange.value) < Number(priceRange.max)) {
-    params.set("maxPrice", priceRange.value);
-  }
-
-  const emptyState = document.getElementById("listingEmptyState");
-  const requestId = ++movieFilterRequestId;
-  grid.innerHTML = `<p class="list-message">Loading movies&hellip;</p>`;
-  if (emptyState) emptyState.hidden = true;
-
-  try {
-    const movies = await apiGet(`/movies?${params.toString()}`);
-    if (requestId !== movieFilterRequestId) return; // a newer request has since started
-
-    renderCardRow("movieListingGrid", movies.map(movieToCard));
-    if (emptyState) emptyState.hidden = movies.length !== 0;
-
-    const countEl = document.getElementById("resultCount");
-    if (countEl) countEl.textContent = `${movies.length} movie${movies.length === 1 ? "" : "s"}`;
-  } catch (err) {
-    if (requestId !== movieFilterRequestId) return;
-    console.error(err);
-    grid.innerHTML = `<p class="list-message">Couldn't load movies. Please try again.</p>`;
-    if (emptyState) emptyState.hidden = true;
-  }
-}
-
-/** Wires every filter control on the Movie Listing page to re-run the filter live. */
-function setupMovieListingFilters() {
-  const grid = document.getElementById("movieListingGrid");
-  if (!grid) return;
-
-  document
-    .querySelectorAll('#filterPanel input[type="checkbox"], #filterPanel input[type="radio"]')
-    .forEach((input) => input.addEventListener("change", applyMovieFilters));
-
-  const priceRange = document.getElementById("priceRange");
-  const priceLabel = document.getElementById("priceRangeLabel");
-  const debouncedApply = debounce(applyMovieFilters, 250);
-  if (priceRange) {
-    priceRange.addEventListener("input", () => {
-      if (priceLabel) priceLabel.textContent = `Up to ₹${priceRange.value}`;
-      debouncedApply();
-    });
-  }
-
-  const clearBtn = document.getElementById("clearFiltersBtn");
-  if (clearBtn) {
-    clearBtn.addEventListener("click", () => {
-      document
-        .querySelectorAll('#filterPanel input[type="checkbox"]')
-        .forEach((el) => (el.checked = false));
-      document
-        .querySelectorAll('#filterPanel input[type="radio"]')
-        .forEach((el) => (el.checked = el.value === "0"));
-      if (priceRange) {
-        priceRange.value = priceRange.max;
-        if (priceLabel) priceLabel.textContent = `Up to ₹${priceRange.value}`;
-      }
-      applyMovieFilters();
-    });
-  }
-
-  applyMovieFilters();
 }
 
 /* ==========================================================================
@@ -389,7 +295,7 @@ async function loadShows() {
 
   try {
     const data = await apiGet(
-      `/shows?movieId=${encodeURIComponent(SHOW_MOVIE_ID)}&date=${requestedDate}`
+      `/shows?movieId=${encodeURIComponent(SHOW_MOVIE_ID)}&date=${requestedDate}&city=${encodeURIComponent(getSelectedCity())}`
     );
     // If the user clicked another date while this was loading, ignore the old response
     if (requestedDate !== selectedDate) return;
@@ -480,7 +386,6 @@ function initShowTimings() {
 
 document.addEventListener("DOMContentLoaded", () => {
   setupResultsSearch();
-  setupMovieListingFilters();
   setupExpandableDescription();
   initMovieDetails();
   initShowTimings();

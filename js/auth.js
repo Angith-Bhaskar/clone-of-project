@@ -1,9 +1,10 @@
 /* ==========================================================================
    auth.js
    Shared across login, signup, forgot-password.
-   Currently implements: Login page (tab switching, phone/email/password
-   validation, password visibility toggle). All validation is client-side
-   only — there is no real authentication backend.
+   Each form validates its fields in the browser first (fast feedback), then
+   calls the real API (POST /auth/login, /auth/register, /auth/forgot-password,
+   /auth/reset-password). The server validates everything again; the browser
+   checks are only a convenience. Loaded after js/api.js.
    ========================================================================== */
 
 /* ---- Validation helpers -------------------------------------------------- */
@@ -11,7 +12,7 @@
 /** 10-digit Indian mobile number, no leading zero. */
 function isValidPhone(value) {
   return /^[6-9]\d{9}$/.test(value.trim());
-} 
+}
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
@@ -20,7 +21,54 @@ function isValidEmail(value) {
 /** Shows/clears an inline error message under a field. */
 function setFieldError(errorEl, inputEl, message) {
   errorEl.textContent = message;
-  inputEl.classList.toggle("invalid", Boolean(message));
+  if (inputEl) inputEl.classList.toggle("invalid", Boolean(message));
+}
+
+/* ---- Shared login/signup plumbing ------------------------------------------ */
+
+/**
+ * Where to go after logging in: the ?next= page (set by requireLogin) or the
+ * home page. Only plain same-site page names are allowed, so a crafted link
+ * can't bounce someone to another website.
+ */
+function getPostLoginDestination() {
+  const next = getQueryParam("next");
+  return /^[a-z0-9-]+\.html(\?[\w=&%.-]*)?$/i.test(next) ? next : "index.html";
+}
+
+/** Stores the token + user the server returned, then moves on. */
+function finishLogin(data) {
+  saveSession(data.token, data.user);
+  window.location.href = getPostLoginDestination();
+}
+
+/** Runs an async submit action with the button disabled and any server error shown under the form. */
+async function submitWithFeedback(form, errorEl, action) {
+  const button = form.querySelector('button[type="submit"]');
+  const originalLabel = button.textContent;
+  errorEl.textContent = "";
+  button.disabled = true;
+  button.textContent = "Please wait…";
+  try {
+    await action();
+  } catch (err) {
+    errorEl.textContent = err.message || "Something went wrong. Please try again.";
+    button.disabled = false;
+    button.textContent = originalLabel;
+  }
+}
+
+/** Wires a show/hide toggle button to the password input next to it. */
+function setupPasswordToggle(toggleId, inputId) {
+  const toggleBtn = document.getElementById(toggleId);
+  const input = document.getElementById(inputId);
+  if (!toggleBtn || !input) return;
+
+  toggleBtn.addEventListener("click", () => {
+    const isHidden = input.type === "password";
+    input.type = isHidden ? "text" : "password";
+    toggleBtn.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
+  });
 }
 
 /* ---- Login page ----------------------------------------------------------- */
@@ -52,6 +100,9 @@ function setupPhoneLoginForm() {
 
   const phoneInput = document.getElementById("phoneInput");
   const phoneError = document.getElementById("phoneError");
+  const passwordInput = document.getElementById("phonePasswordInput");
+  const passwordError = document.getElementById("phonePasswordError");
+  const formError = document.getElementById("phoneFormError");
 
   // Keep the field numeric-only as the user types.
   phoneInput.addEventListener("input", () => {
@@ -60,14 +111,30 @@ function setupPhoneLoginForm() {
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
+    let valid = true;
 
     if (!isValidPhone(phoneInput.value)) {
       setFieldError(phoneError, phoneInput, "Enter a valid 10-digit mobile number.");
-      return;
+      valid = false;
+    } else {
+      setFieldError(phoneError, phoneInput, "");
     }
 
-    setFieldError(phoneError, phoneInput, "");
-    alert("Demo only: an OTP would be sent to +91 " + phoneInput.value + ".");
+    if (!passwordInput.value) {
+      setFieldError(passwordError, passwordInput, "Enter your password.");
+      valid = false;
+    } else {
+      setFieldError(passwordError, passwordInput, "");
+    }
+
+    if (!valid) return;
+
+    submitWithFeedback(form, formError, async () => {
+      finishLogin(await apiPost("/auth/login", {
+        identifier: phoneInput.value.trim(),
+        password: passwordInput.value,
+      }));
+    });
   });
 }
 
@@ -79,13 +146,7 @@ function setupEmailLoginForm() {
   const emailError = document.getElementById("emailError");
   const passwordInput = document.getElementById("passwordInput");
   const passwordError = document.getElementById("passwordError");
-  const toggleBtn = document.getElementById("togglePassword");
-
-  toggleBtn.addEventListener("click", () => {
-    const isHidden = passwordInput.type === "password";
-    passwordInput.type = isHidden ? "text" : "password";
-    toggleBtn.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
-  });
+  const formError = document.getElementById("emailFormError");
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -105,9 +166,14 @@ function setupEmailLoginForm() {
       setFieldError(passwordError, passwordInput, "");
     }
 
-    if (valid) {
-      alert("Demo only: no real authentication is performed.");
-    }
+    if (!valid) return;
+
+    submitWithFeedback(form, formError, async () => {
+      finishLogin(await apiPost("/auth/login", {
+        identifier: emailInput.value.trim(),
+        password: passwordInput.value,
+      }));
+    });
   });
 }
 
@@ -120,19 +186,6 @@ function setupGoogleLoginButton() {
 }
 
 /* ---- Sign Up page ---------------------------------------------------------- */
-
-/** Wires a show/hide toggle button to the password input next to it. */
-function setupPasswordToggle(toggleId, inputId) {
-  const toggleBtn = document.getElementById(toggleId);
-  const input = document.getElementById(inputId);
-  if (!toggleBtn || !input) return;
-
-  toggleBtn.addEventListener("click", () => {
-    const isHidden = input.type === "password";
-    input.type = isHidden ? "text" : "password";
-    toggleBtn.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
-  });
-}
 
 function setupSignupForm() {
   const form = document.getElementById("signupForm");
@@ -148,6 +201,7 @@ function setupSignupForm() {
   const passwordError = document.getElementById("signupPasswordError");
   const confirmInput = document.getElementById("confirmPasswordInput");
   const confirmError = document.getElementById("confirmPasswordError");
+  const formError = document.getElementById("signupFormError");
 
   // Keep the phone field numeric-only as the user types.
   phoneInput.addEventListener("input", () => {
@@ -193,9 +247,17 @@ function setupSignupForm() {
       setFieldError(confirmError, confirmInput, "");
     }
 
-    if (valid) {
-      alert("Demo only: no account is actually created.");
-    }
+    if (!valid) return;
+
+    submitWithFeedback(form, formError, async () => {
+      // Registering also logs the new user in (the server returns a token).
+      finishLogin(await apiPost("/auth/register", {
+        name: nameInput.value.trim(),
+        email: emailInput.value.trim(),
+        phone: phoneInput.value.trim(),
+        password: passwordInput.value,
+      }));
+    });
   });
 }
 
@@ -209,6 +271,12 @@ function setupGoogleSignupButton() {
 
 /* ---- Forgot Password page --------------------------------------------------- */
 
+/**
+ * Step 1: ask the server for a reset token for this email.
+ * Step 2: show the "new password" form and send token + new password.
+ * A real site would email the token as a link; with no email service here, the
+ * server returns it directly (demo mode).
+ */
 function setupForgotPasswordForm() {
   const form = document.getElementById("forgotPasswordForm");
   if (!form) return;
@@ -216,6 +284,11 @@ function setupForgotPasswordForm() {
   const emailInput = document.getElementById("forgotEmailInput");
   const emailError = document.getElementById("forgotEmailError");
   const successMessage = document.getElementById("forgotSuccessMessage");
+  const resetForm = document.getElementById("resetPasswordForm");
+  const resetInput = document.getElementById("resetPasswordInput");
+  const resetError = document.getElementById("resetPasswordError");
+
+  let resetToken = null;
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -227,8 +300,37 @@ function setupForgotPasswordForm() {
     }
 
     setFieldError(emailError, emailInput, "");
-    successMessage.hidden = false;
-    form.reset();
+    submitWithFeedback(form, emailError, async () => {
+      const data = await apiPost("/auth/forgot-password", { email: emailInput.value.trim() });
+      successMessage.textContent = data.message;
+      successMessage.hidden = false;
+      form.querySelector('button[type="submit"]').disabled = false;
+      form.querySelector('button[type="submit"]').textContent = "Send Reset Link";
+
+      if (data.resetToken) {
+        resetToken = data.resetToken;
+        form.hidden = true;
+        resetForm.hidden = false;
+      }
+    });
+  });
+
+  resetForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    if (resetInput.value.length < 6) {
+      setFieldError(resetError, resetInput, "Password must be at least 6 characters.");
+      return;
+    }
+
+    setFieldError(resetError, resetInput, "");
+    submitWithFeedback(resetForm, resetError, async () => {
+      const data = await apiPost("/auth/reset-password", { token: resetToken, password: resetInput.value });
+      successMessage.textContent = `${data.message} Redirecting to sign in…`;
+      successMessage.hidden = false;
+      resetForm.hidden = true;
+      setTimeout(() => { window.location.href = "login.html"; }, 1500);
+    });
   });
 }
 
@@ -237,6 +339,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setupPhoneLoginForm();
   setupEmailLoginForm();
   setupGoogleLoginButton();
+  setupPasswordToggle("togglePassword", "passwordInput");
+  setupPasswordToggle("togglePhonePassword", "phonePasswordInput");
 
   setupSignupForm();
   setupGoogleSignupButton();

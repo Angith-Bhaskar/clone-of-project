@@ -12,11 +12,14 @@ require('./models/Seat');
 require('./models/Event');
 require('./models/Booking');
 require('./models/Payment');
+require('./models/User');
 
 const movieRoutes = require('./routes/movieRoutes');
 const showRoutes = require('./routes/showRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
+const authRoutes = require('./routes/authRoutes');
+const cityRoutes = require('./routes/cityRoutes');
 
 const app = express();
 
@@ -32,6 +35,8 @@ app.get('/', (req, res) => {
 app.use('/api/movies', movieRoutes);
 app.use('/api/shows', showRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/cities', cityRoutes);
 app.use('/api/bookings', bookingRoutes);
 
 // Unknown /api/* path -> JSON 404. Must stay last.

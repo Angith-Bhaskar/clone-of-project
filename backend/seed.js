@@ -20,10 +20,11 @@ const SEAT_CATEGORIES = [
 
 const BOOKED = ['A3', 'A4', 'C7', 'D2', 'D3', 'F10', 'G1', 'G2', 'H11'];
 
-// Replace with the FULL array from your frontend file
+// Each theatre belongs to a city; the navbar city picker filters by it.
 const THEATRES = [
   {
     name: 'PVR Cinemas: Phoenix Mall',
+    city: 'Mumbai',
     address: 'Phoenix Marketcity, Kurla West, Mumbai',
     languages: ['English', 'Hindi'],
     formats: ['IMAX', '2D'],
@@ -31,6 +32,7 @@ const THEATRES = [
   },
   {
     name: 'INOX: R-City',
+    city: 'Mumbai',
     address: 'R-City Mall, Ghatkopar West, Mumbai',
     languages: ['Hindi'],
     formats: ['2D'],
@@ -38,10 +40,59 @@ const THEATRES = [
   },
   {
     name: 'Cinepolis: Fun Republic',
+    city: 'Mumbai',
     address: 'Fun Republic Mall, Andheri West, Mumbai',
     languages: ['English'],
     formats: ['3D', '2D'],
     times: ['12:00 PM', '3:30 PM', '7:15 PM', '10:00 PM'],
+  },
+  {
+    name: 'PVR: Select Citywalk',
+    city: 'Delhi',
+    address: 'Select Citywalk Mall, Saket, New Delhi',
+    languages: ['Hindi', 'English'],
+    formats: ['IMAX', '2D'],
+    times: ['10:00 AM', '1:30 PM', '5:15 PM', '9:00 PM'],
+  },
+  {
+    name: 'INOX: Nehru Place',
+    city: 'Delhi',
+    address: 'Nehru Place, New Delhi',
+    languages: ['Hindi'],
+    formats: ['2D'],
+    times: ['11:30 AM', '3:00 PM', '6:45 PM'],
+  },
+  {
+    name: 'PVR: Orion Mall',
+    city: 'Bengaluru',
+    address: 'Orion Mall, Rajajinagar, Bengaluru',
+    languages: ['English', 'Hindi'],
+    formats: ['IMAX', '2D'],
+    times: ['10:15 AM', '1:45 PM', '5:30 PM', '9:15 PM'],
+  },
+  {
+    name: 'Cinepolis: Nexus Koramangala',
+    city: 'Bengaluru',
+    address: 'Nexus Mall, Koramangala, Bengaluru',
+    languages: ['English'],
+    formats: ['3D', '2D'],
+    times: ['12:15 PM', '3:45 PM', '7:30 PM'],
+  },
+  {
+    name: 'SPI Cinemas: Palazzo',
+    city: 'Chennai',
+    address: 'The Forum Vijaya Mall, Vadapalani, Chennai',
+    languages: ['Hindi', 'English'],
+    formats: ['2D', '3D'],
+    times: ['10:45 AM', '2:00 PM', '5:45 PM', '9:30 PM'],
+  },
+  {
+    name: 'PVR: VR Mall',
+    city: 'Chennai',
+    address: 'VR Mall, Anna Nagar, Chennai',
+    languages: ['Hindi'],
+    formats: ['2D'],
+    times: ['11:00 AM', '2:30 PM', '6:15 PM'],
   },
 ];
 
@@ -77,7 +128,7 @@ async function seed() {
       theatres.push({
         _id: theatreId,
         theatreName: t.name,
-        city: 'Mumbai',
+        city: t.city,
         address: t.address,
         screens: [screenId],
       });

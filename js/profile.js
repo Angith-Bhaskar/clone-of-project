@@ -1,22 +1,54 @@
 /* ==========================================================================
    profile.js
-   Shared across profile, booking-history.
-   Currently implements: My Profile page (frontend-only edit mode — nothing
-   is persisted to a backend; "saved" values just stay in the DOM/session).
+   Used by the profile page. (Booking History is now React: react-app/src/booking-history.)
+   Profile loads/saves through GET/PUT /auth/me; booking history through
+   a logged-in user.
    ========================================================================== */
 
 /* ---- My Profile page ------------------------------------------------------- */
 
-function setupProfileEditMode() {
+/** Loads the logged-in user's details (GET /auth/me) into the form, then wires edit/save/cancel (PUT /auth/me). */
+async function setupProfileEditMode() {
   const form = document.getElementById("profileForm");
   if (!form) return;
 
   const inputs = form.querySelectorAll("input");
+  const nameInput = document.getElementById("profileName");
+  const emailInput = document.getElementById("profileEmail");
+  const phoneInput = document.getElementById("profilePhone");
   const editBtn = document.getElementById("editProfileBtn");
   const saveBtn = document.getElementById("saveProfileBtn");
   const cancelBtn = document.getElementById("cancelEditBtn");
   const changePhotoBtn = document.getElementById("changePhotoBtn");
   const saveNote = document.getElementById("profileSaveNote");
+
+  // Show the details we already have from login straight away, then confirm with the server.
+  function fillForm(user) {
+    nameInput.value = user.name || "";
+    emailInput.value = user.email || "";
+    phoneInput.value = user.phone || "";
+  }
+
+  function showNote(message, isError) {
+    saveNote.textContent = message;
+    saveNote.style.color = isError ? "var(--color-primary)" : "";
+    saveNote.hidden = false;
+  }
+
+  const cached = getCurrentUser();
+  if (cached) fillForm(cached);
+  editBtn.disabled = true;
+
+  try {
+    const user = await apiGet("/auth/me");
+    saveCurrentUser(user);
+    fillForm(user);
+    editBtn.disabled = false;
+  } catch (err) {
+    console.error(err);
+    showNote("Couldn't load your profile. Please refresh.", true);
+    return;
+  }
 
   let previousValues = [];
 
@@ -45,11 +77,25 @@ function setupProfileEditMode() {
     exitEditMode();
   });
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    // Frontend-only "save" — no backend call, values simply stay as edited.
-    exitEditMode();
-    saveNote.hidden = false;
+    saveBtn.disabled = true;
+    try {
+      const user = await apiPut("/auth/me", {
+        name: nameInput.value,
+        email: emailInput.value,
+        phone: phoneInput.value,
+      });
+      saveCurrentUser(user);
+      fillForm(user);
+      exitEditMode();
+      showNote("Profile updated.", false);
+    } catch (err) {
+      // Stay in edit mode so the user can fix the problem (bad phone, email already used, ...).
+      showNote(err.message, true);
+    } finally {
+      saveBtn.disabled = false;
+    }
   });
 
   changePhotoBtn.addEventListener("click", () => {
@@ -57,72 +103,9 @@ function setupProfileEditMode() {
   });
 }
 
-/* ---- Booking History page --------------------------------------------------- */
-
-/** Renders bookings from GET /bookings into the list, each linking to its confirmation page. */
-function renderBookingList(bookings) {
-  const list = document.getElementById("bookingList");
-  const emptyState = document.getElementById("historyEmptyState");
-  if (!list) return;
-
-  list.innerHTML = bookings
-    .map((b) => {
-      const dateTime = [formatDate(b.showDate), b.showTime].filter(Boolean).join(", ");
-      return `
-      <a class="booking-item" href="booking-confirmation.html?bookingId=${encodeURIComponent(b.id)}">
-        <img class="booking-item-poster" src="${escapeHTML(b.movie?.poster || "")}" alt="${escapeHTML(b.movie?.title || "")} poster" />
-        <div class="booking-item-info">
-          <div class="booking-item-title-row">
-            <span class="booking-item-title">${escapeHTML(b.movie?.title || "")}</span>
-            <span class="status-badge ${escapeHTML(b.status)}">${escapeHTML(b.status)}</span>
-          </div>
-          <p class="booking-item-meta">${escapeHTML(b.theatre?.name || "")}</p>
-          <p class="booking-item-meta">${escapeHTML(dateTime)} &bull; ${b.seatCount} seat${b.seatCount === 1 ? "" : "s"} &bull; ${formatRupees(b.amount)}</p>
-        </div>
-      </a>`;
-    })
-    .join("");
-
-  if (emptyState) emptyState.hidden = bookings.length !== 0;
-}
-
-/** Fetches GET /bookings?status= (server-side filter) and renders the result. */
-async function loadBookingHistory(status) {
-  const list = document.getElementById("bookingList");
-  const emptyState = document.getElementById("historyEmptyState");
-  if (!list) return;
-
-  list.innerHTML = `<p class="list-message">Loading your bookings&hellip;</p>`;
-  if (emptyState) emptyState.hidden = true;
-
-  try {
-    const suffix = status && status !== "all" ? `?status=${encodeURIComponent(status)}` : "";
-    const bookings = await apiGet(`/bookings${suffix}`);
-    renderBookingList(bookings);
-  } catch (err) {
-    console.error(err);
-    list.innerHTML = `<p class="list-message">Couldn't load your bookings. Please try again.</p>`;
-    if (emptyState) emptyState.hidden = true;
-  }
-}
-
-/** Wires the status filter pills (All / Upcoming / Completed / Cancelled); each re-queries the server. */
-function setupBookingHistoryFilters() {
-  const filterBar = document.getElementById("historyFilters");
-  if (!filterBar) return;
-
-  filterBar.querySelectorAll(".history-filter-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      filterBar.querySelectorAll(".history-filter-btn").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      loadBookingHistory(btn.dataset.status);
-    });
-  });
-
-  loadBookingHistory("all");
-}
-
 document.addEventListener("DOMContentLoaded", () => {
+  // Profile and booking history both belong to a logged-in user.
+  if (!requireLogin()) return;
+
   setupProfileEditMode();
-  setupBookingHistoryFilters();
 });
