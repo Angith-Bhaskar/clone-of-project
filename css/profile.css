@@ -248,3 +248,10 @@
 .history-section .empty-state {
   padding: 50px 20px;
 }
+
+/* The status tabs are router links (<a>) now; keep them looking like the old buttons. */
+a.history-filter-btn {
+  display: inline-block;
+  line-height: 1.2;
+  text-decoration: none;
+}

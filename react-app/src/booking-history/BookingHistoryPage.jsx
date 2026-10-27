@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Navigate, NavLink, useParams } from 'react-router-dom';
 import BookingCard from './BookingCard';
 import { apiGet } from '../lib/toolkit';
 import { useLoader } from '../lib/hooks';
@@ -11,13 +11,19 @@ const FILTERS = [
 ];
 
 export default function BookingHistoryPage() {
-  const [status, setStatus] = useState('all');
+  // The selected tab comes from the URL (#/history/:status), not from useState.
+  const { status: urlStatus } = useParams();
+  const validStatus = FILTERS.some((f) => f.status === urlStatus);
+  const status = validStatus ? urlStatus : 'all';
 
-  // Changing the status re-runs the request: the server does the filtering.
+  // Changing the URL changes `status`, which re-runs the request: the server does the filtering.
   const { status: loadState, data: bookings } = useLoader(
     () => apiGet(status === 'all' ? '/bookings' : `/bookings?status=${encodeURIComponent(status)}`),
     [status]
   );
+
+  // An unknown tab such as #/history/foo falls back to All.
+  if (!validStatus) return <Navigate to="/history/all" replace />;
 
   let list;
   if (loadState === 'error') {
@@ -42,14 +48,13 @@ export default function BookingHistoryPage() {
 
           <div className="history-filters" id="historyFilters">
             {FILTERS.map((f) => (
-              <button
+              <NavLink
                 key={f.status}
-                type="button"
-                className={`history-filter-btn${status === f.status ? ' active' : ''}`}
-                onClick={() => setStatus(f.status)}
+                to={`/history/${f.status}`}
+                className={({ isActive }) => `history-filter-btn${isActive ? ' active' : ''}`}
               >
                 {f.label}
-              </button>
+              </NavLink>
             ))}
           </div>
         </div>
