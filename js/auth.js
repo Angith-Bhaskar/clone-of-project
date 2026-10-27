@@ -1,6 +1,6 @@
 /* ==========================================================================
    auth.js
-   Shared across login, signup, forgot-password.
+   Shared across signup and forgot-password. (Login is now a React page: react-app/src/login.)
    Each form validates its fields in the browser first (fast feedback), then
    calls the real API (POST /auth/login, /auth/register, /auth/forgot-password,
    /auth/reset-password). The server validates everything again; the browser
@@ -68,120 +68,6 @@ function setupPasswordToggle(toggleId, inputId) {
     const isHidden = input.type === "password";
     input.type = isHidden ? "text" : "password";
     toggleBtn.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
-  });
-}
-
-/* ---- Login page ----------------------------------------------------------- */
-
-function setupLoginTabs() {
-  const phoneTabBtn = document.getElementById("phoneTabBtn");
-  const emailTabBtn = document.getElementById("emailTabBtn");
-  const phoneForm = document.getElementById("phoneLoginForm");
-  const emailForm = document.getElementById("emailLoginForm");
-  if (!phoneTabBtn || !emailTabBtn) return;
-
-  function activate(tab) {
-    const showPhone = tab === "phone";
-    phoneTabBtn.classList.toggle("active", showPhone);
-    emailTabBtn.classList.toggle("active", !showPhone);
-    phoneTabBtn.setAttribute("aria-selected", showPhone);
-    emailTabBtn.setAttribute("aria-selected", !showPhone);
-    phoneForm.hidden = !showPhone;
-    emailForm.hidden = showPhone;
-  }
-
-  phoneTabBtn.addEventListener("click", () => activate("phone"));
-  emailTabBtn.addEventListener("click", () => activate("email"));
-}
-
-function setupPhoneLoginForm() {
-  const form = document.getElementById("phoneLoginForm");
-  if (!form) return;
-
-  const phoneInput = document.getElementById("phoneInput");
-  const phoneError = document.getElementById("phoneError");
-  const passwordInput = document.getElementById("phonePasswordInput");
-  const passwordError = document.getElementById("phonePasswordError");
-  const formError = document.getElementById("phoneFormError");
-
-  // Keep the field numeric-only as the user types.
-  phoneInput.addEventListener("input", () => {
-    phoneInput.value = phoneInput.value.replace(/\D/g, "").slice(0, 10);
-  });
-
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    let valid = true;
-
-    if (!isValidPhone(phoneInput.value)) {
-      setFieldError(phoneError, phoneInput, "Enter a valid 10-digit mobile number.");
-      valid = false;
-    } else {
-      setFieldError(phoneError, phoneInput, "");
-    }
-
-    if (!passwordInput.value) {
-      setFieldError(passwordError, passwordInput, "Enter your password.");
-      valid = false;
-    } else {
-      setFieldError(passwordError, passwordInput, "");
-    }
-
-    if (!valid) return;
-
-    submitWithFeedback(form, formError, async () => {
-      finishLogin(await apiPost("/auth/login", {
-        identifier: phoneInput.value.trim(),
-        password: passwordInput.value,
-      }));
-    });
-  });
-}
-
-function setupEmailLoginForm() {
-  const form = document.getElementById("emailLoginForm");
-  if (!form) return;
-
-  const emailInput = document.getElementById("emailInput");
-  const emailError = document.getElementById("emailError");
-  const passwordInput = document.getElementById("passwordInput");
-  const passwordError = document.getElementById("passwordError");
-  const formError = document.getElementById("emailFormError");
-
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    let valid = true;
-
-    if (!isValidEmail(emailInput.value)) {
-      setFieldError(emailError, emailInput, "Enter a valid email address.");
-      valid = false;
-    } else {
-      setFieldError(emailError, emailInput, "");
-    }
-
-    if (passwordInput.value.length < 6) {
-      setFieldError(passwordError, passwordInput, "Password must be at least 6 characters.");
-      valid = false;
-    } else {
-      setFieldError(passwordError, passwordInput, "");
-    }
-
-    if (!valid) return;
-
-    submitWithFeedback(form, formError, async () => {
-      finishLogin(await apiPost("/auth/login", {
-        identifier: emailInput.value.trim(),
-        password: passwordInput.value,
-      }));
-    });
-  });
-}
-
-function setupGoogleLoginButton() {
-  const btn = document.getElementById("googleLoginBtn");
-  if (!btn) return;
-  btn.addEventListener("click", () => {
-    alert("Demo only: Google sign-in is not integrated.");
   });
 }
 
@@ -335,13 +221,6 @@ function setupForgotPasswordForm() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  setupLoginTabs();
-  setupPhoneLoginForm();
-  setupEmailLoginForm();
-  setupGoogleLoginButton();
-  setupPasswordToggle("togglePassword", "passwordInput");
-  setupPasswordToggle("togglePhonePassword", "phonePasswordInput");
-
   setupSignupForm();
   setupGoogleSignupButton();
   setupPasswordToggle("toggleSignupPassword", "signupPasswordInput");

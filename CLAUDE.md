@@ -46,7 +46,7 @@ Everything else (Home, Search, Listing, Details, Seat Selection, Summary, Paymen
 ## 4. Hard rules
 
 1. **No authentication work.** No user registration, login, tokens, bcrypt, or auth middleware. Bookings belong to the placeholder user id `guest`.
-2. **Vanilla frontend, except three React pages.** The course requires some React: Seat Selection, Movie Listing and Booking History are React (source in `react-app/`, built with Vite into `react-dist/`). Every other page stays plain HTML/CSS/JS. No jQuery, Bootstrap or Tailwind. Backend may only add packages if truly necessary; prefer none.
+2. **Vanilla frontend, except four React pages.** The course requires some React: Seat Selection, Movie Listing, Booking History and Login are React (source in `react-app/`, built with Vite into `react-dist/`). Every other page stays plain HTML/CSS/JS. No jQuery, Bootstrap or Tailwind. Backend may only add packages if truly necessary; prefer none.
 3. **Never delete or overwrite the `Movies` collection.** It holds the team's real data. Adding movies must use an insert-only upsert. `seed.js` must never call `Movie.deleteMany`.
 4. **Confirm before running any seed script.** Seeding wipes shared collections in a database the whole team uses. Ask the user first, and tell them what will be deleted.
 5. **Preserve the existing UI.** Read each page's HTML and JS before editing. Adapt to the ids and class names that already exist; do not rename them or restyle pages. If you must add an element id, add it without changing layout.

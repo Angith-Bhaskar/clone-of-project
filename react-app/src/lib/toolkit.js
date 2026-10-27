@@ -9,3 +9,5 @@ export const formatDate = (value) => window.formatDate(value);
 export const formatRating = (rating) => window.formatRating(rating);
 export const getQueryParam = (name) => window.getQueryParam(name);
 export const requireLogin = (nextPage) => window.requireLogin(nextPage);
+export const apiPost = (path, body) => window.apiPost(path, body);
+export const saveSession = (token, user) => window.saveSession(token, user);

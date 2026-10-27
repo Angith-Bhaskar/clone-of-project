@@ -15,6 +15,7 @@ export default defineConfig({
         'seat-selection': 'src/seat-selection/main.jsx',
         movies: 'src/movies/main.jsx',
         'booking-history': 'src/booking-history/main.jsx',
+        login: 'src/login/main.jsx',
       },
       output: {
         entryFileNames: '[name].js',
